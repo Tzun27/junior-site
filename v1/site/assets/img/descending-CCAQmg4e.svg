@@ -1,0 +1,12 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g id="Table filter 1" clip-path="url(#clip0_3526_7752)">
+        <path id="Vector"
+              d="M12.5429 7.22857L18.9429 18.3143C19.1143 18.6 18.8857 19 18.5429 19L5.74286 19C5.4 19 5.17143 18.6 5.34286 18.3143L11.7429 7.22857C11.9143 6.94286 12.3714 6.94286 12.5429 7.22857Z"
+              fill="#9A7B52"/>
+    </g>
+    <defs>
+        <clipPath id="clip0_880_12427">
+            <rect width="13.7143" height="12" fill="white" transform="translate(19 19) rotate(-180)"/>
+        </clipPath>
+    </defs>
+</svg>
