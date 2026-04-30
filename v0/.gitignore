@@ -1,0 +1,43 @@
+# Local references — screenshots, original CSS dump, parse.py, etc.
+# Used during development; not loaded by the site itself.
+_ref/
+
+# One-off scratch dirs (e.g. when sharing a screenshot in chat)
+mistake/
+scratch/
+tmp/
+
+# Loose top-level images that aren't part of the site assets
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.webp
+
+# Python (parse.py runs from _ref/ but cache may land anywhere)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Node (in case anything ever uses npx)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs / local server output
+*.log
