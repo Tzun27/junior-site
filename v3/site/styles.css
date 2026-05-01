@@ -1,32 +1,62 @@
 /* =================================================================
-   v3 — 新生支持辦公室 · cinematic editorial × phoenix glow
+   v3 — 新生支持辦公室 · cinematic editorial × NCKU brand-aligned
    ================================================================= */
 
-/* ---------- tokens ---------- */
+/* ---------- tokens ----------
+ *  Aligned to NCKU's official design system — see ../aesthetic.md
+ *  and ../../ncku-design.md. Light theme: white-majority page like
+ *  the live web.ncku.edu.tw, with NCKU Red / Maroon / Gold as accents.
+ *  Cinematic depth here comes from composition, photography, and
+ *  motion — not from luminous glow.
+ */
 :root {
-  --ink-0: #08050a;
-  --ink-1: #14080f;
-  --ink-2: #2a0c19;
-  --ink-3: #3a1224;
+  /* === Surface layers (LIGHT — white-majority) ===
+   *  Names kept from the prior dark theme for cascade compatibility,
+   *  but values are now light: paper white, light silver tints, with
+   *  Maroon reserved for the rare deep accent strip / image overlay. */
+  --ink-0: #ffffff;       /* paper white — page background */
+  --ink-1: #f7f6f7;       /* very light silver tint — subtle elevated areas */
+  --ink-2: #ececee;       /* light silver — card surfaces */
+  --ink-3: #420a15;       /* Maroon — accent strips and image overlays only */
 
-  --phoenix: #c92a3a;
-  --phoenix-glow: #ff5a6a;
-  --coral: #ffb4a3;
+  /* === Primary accent — NCKU Red 201C (Signature Red) === */
+  --ncku-red: #a31f34;
+  --ncku-red-soft: #c8425a;       /* tint of 201C — highlight gradients only */
+  --phoenix: #a31f34;             /* legacy alias → NCKU Red */
+  --phoenix-glow: #a31f34;        /* on light, glow collapses to solid 201C */
 
-  --bone: #f4ece4;
-  --bone-dim: #b8a89e;
-  --bone-mute: #7a6e68;
-  --steel: #4a5266;
-  --steel-dim: #2c3140;
+  /* === Heritage accents (sparing) === */
+  --ncku-gold: #8c6e4a;           /* PANTONE 874C */
+  --ncku-silver: #a6a9ab;         /* PANTONE 877C */
 
-  --rule: rgba(244, 236, 228, 0.12);
-  --rule-soft: rgba(244, 236, 228, 0.06);
+  /* === CIS palette greys & maroon (explicit refs for headline overrides) === */
+  --ncku-dark-grey: #555559;      /* PANTONE Cool Gray 11C — body text */
+  --ncku-maroon:    #420a15;      /* International Maroon — display headlines */
 
-  --ff-display-latin: "Fraunces", "Noto Serif TC", serif;
-  --ff-display-cjk: "Noto Serif TC", "Fraunces", serif;
-  --ff-body: "Manrope", "Noto Sans TC", system-ui, sans-serif;
-  --ff-cjk: "Noto Sans TC", "Manrope", system-ui, sans-serif;
-  --ff-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* === Reserved — Phoenix flower mark only, never as a UI accent === */
+  --phoenix-flower: #e4002b;      /* PANTONE 185C */
+
+  /* === Type colors on light surfaces ===
+   *  Body / primary text uses Cool Gray 11C per the live school site.
+   *  --bone-dim and --bone-mute step down through silver tones. */
+  --bone:      #555559;           /* primary text — Cool Gray 11C */
+  --bone-dim:  #7a7a7e;           /* secondary text — mid silver */
+  --bone-mute: #a6a9ab;           /* tertiary / micro labels — Silver 877C */
+
+  --rule:      rgba(0, 0, 0, 0.12);   /* divider on white */
+  --rule-soft: rgba(0, 0, 0, 0.06);   /* hairline divider */
+
+  /* === Type stack — Noto family per NCKU brand ===
+   *  Headlines drop to Light (300) per spec — the lightness is intentional
+   *  and on-brand. Italic Noto Serif TC is used SPARINGLY for editorial
+   *  accents (pull quote, hero italic word) — never as a headline face. */
+  --ff-display-cjk:   "Noto Sans TC", "Noto Sans", "PingFang TC",
+                      "Microsoft JhengHei", system-ui, sans-serif;
+  --ff-display-latin: "Noto Sans", "Noto Sans TC", system-ui, sans-serif;
+  --ff-accent-italic: "Noto Serif TC", "Noto Serif", Georgia, serif;
+  --ff-body:          "Noto Sans", "Noto Sans TC", system-ui, sans-serif;
+  --ff-cjk:           "Noto Sans TC", "Noto Sans", system-ui, sans-serif;
+  --ff-mono:          "JetBrains Mono", ui-monospace, monospace;
 
   --rail-w: 96px;
   --gutter: clamp(1.25rem, 4vw, 4rem);
@@ -55,27 +85,27 @@ body {
 img { max-width: 100%; display: block; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 a { color: inherit; text-decoration: none; }
-::selection { background: var(--phoenix); color: var(--bone); }
+::selection { background: var(--ncku-red); color: #ffffff; }
 
-/* ---------- global atmosphere (fixed gradient + grain) ---------- */
+/* ---------- global atmosphere (paper-warm white + faint accents) ---------- */
 .atmosphere {
   position: fixed;
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(ellipse 90% 60% at 80% 0%, rgba(201, 42, 58, 0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 0% 40%, rgba(58, 18, 36, 0.55) 0%, transparent 65%),
-    radial-gradient(ellipse 80% 60% at 100% 100%, rgba(255, 90, 106, 0.10) 0%, transparent 55%),
-    linear-gradient(180deg, var(--ink-0) 0%, var(--ink-1) 50%, var(--ink-2) 100%);
+    radial-gradient(ellipse 90% 60% at 90% 0%, rgba(163, 31, 52, 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 0% 40%, rgba(166, 169, 171, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 60% at 100% 100%, rgba(140, 110, 74, 0.04) 0%, transparent 55%),
+    linear-gradient(180deg, var(--ink-0) 0%, var(--ink-1) 65%, var(--ink-2) 100%);
 }
 .atmosphere::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.5;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.92  0 0 0 0 0.88  0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  mix-blend-mode: overlay;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.43  0 0 0 0 0.35  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: multiply;
 }
 
 /* ---------- top nav ---------- */
@@ -88,13 +118,14 @@ a { color: inherit; text-decoration: none; }
   justify-content: space-between;
   padding: 1.1rem var(--gutter);
   backdrop-filter: blur(14px);
-  background: linear-gradient(180deg, rgba(8, 5, 10, 0.78) 0%, rgba(8, 5, 10, 0) 100%);
-  border-bottom: 1px solid transparent;
-  transition: border-color .35s var(--ease), background .35s var(--ease);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.6) 100%);
+  border-bottom: 2px solid transparent;
+  transition: border-color .35s var(--ease), background .35s var(--ease), box-shadow .35s var(--ease);
 }
 .topbar.is-scrolled {
-  background: rgba(8, 5, 10, 0.86);
-  border-bottom-color: var(--rule-soft);
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom-color: var(--ncku-gold);   /* thin gold rule like the live web.ncku.edu.tw utility strip */
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
 }
 .brand {
   display: flex;
@@ -103,7 +134,7 @@ a { color: inherit; text-decoration: none; }
 }
 .brand img {
   width: 32px; height: 32px;
-  filter: brightness(1.15) drop-shadow(0 0 10px rgba(255, 90, 106, 0.35));
+  filter: none;
 }
 .brand-text {
   display: flex;
@@ -115,7 +146,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: 600;
   font-size: 0.95rem;
   letter-spacing: 0.04em;
-  color: var(--bone);
+  color: var(--ncku-maroon);
 }
 .brand-text span {
   font-family: var(--ff-mono);
@@ -140,7 +171,7 @@ a { color: inherit; text-decoration: none; }
 }
 .topnav a:hover {
   color: var(--bone);
-  background: rgba(244, 236, 228, 0.06);
+  background: rgba(163, 31, 52, 0.06);
 }
 .menu-toggle {
   display: none;
@@ -193,11 +224,11 @@ a { color: inherit; text-decoration: none; }
 }
 .rail button:hover { color: var(--bone-dim); }
 .rail button:hover .label { opacity: 1; transform: translateX(0); }
-.rail button.is-active { color: var(--phoenix-glow); }
+.rail button.is-active { color: var(--ncku-red); }
 .rail button.is-active .dash {
   width: 32px;
-  background: var(--phoenix-glow);
-  box-shadow: 0 0 12px rgba(255, 90, 106, 0.7);
+  background: var(--ncku-red);
+  box-shadow: 0 0 8px rgba(163, 31, 52, 0.35);
 }
 .rail button.is-active .label { opacity: 1; transform: translateX(0); }
 
@@ -210,21 +241,19 @@ a { color: inherit; text-decoration: none; }
 .fab__toggle {
   width: 60px; height: 60px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, var(--phoenix-glow), var(--phoenix) 70%);
+  background: radial-gradient(circle at 30% 30%, var(--ncku-red-soft), var(--ncku-red) 70%);
   box-shadow:
-    0 0 0 1px rgba(255, 90, 106, 0.3),
-    0 18px 40px -10px rgba(201, 42, 58, 0.6),
-    0 0 30px rgba(255, 90, 106, 0.35);
+    0 14px 28px -10px rgba(163, 31, 52, 0.35),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
   display: grid; place-items: center;
-  color: var(--bone);
+  color: #ffffff;
   transition: transform .3s var(--ease), box-shadow .3s var(--ease);
 }
 .fab__toggle:hover {
   transform: translateY(-2px) scale(1.04);
   box-shadow:
-    0 0 0 1px rgba(255, 90, 106, 0.5),
-    0 22px 50px -10px rgba(201, 42, 58, 0.8),
-    0 0 40px rgba(255, 90, 106, 0.55);
+    0 18px 36px -10px rgba(163, 31, 52, 0.5),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 .fab__toggle svg { width: 22px; height: 22px; }
 .fab__panel {
@@ -232,11 +261,11 @@ a { color: inherit; text-decoration: none; }
   right: 0; bottom: 76px;
   width: 240px;
   padding: 0.75rem;
-  background: rgba(20, 8, 15, 0.92);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   border: 1px solid var(--rule);
   border-radius: 14px;
-  box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.18);
   opacity: 0;
   transform: translateY(8px) scale(0.96);
   pointer-events: none;
@@ -256,7 +285,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--bone-dim);
   transition: background .2s var(--ease), color .2s var(--ease);
 }
-.fab__panel a:hover { background: rgba(244, 236, 228, 0.06); color: var(--bone); }
+.fab__panel a:hover { background: rgba(163, 31, 52, 0.06); color: var(--bone); }
 .fab__panel a::before {
   content: "→";
   font-family: var(--ff-mono);
@@ -289,20 +318,18 @@ a { color: inherit; text-decoration: none; }
 }
 .scene__num::before {
   content: ""; width: 22px; height: 1px; background: currentColor;
-  box-shadow: 0 0 8px var(--phoenix-glow);
 }
 .scene__title {
   font-family: var(--ff-display-cjk);
-  font-weight: 700;
+  font-weight: 300;
   font-size: clamp(2.1rem, 5.2vw, 3.6rem);
-  line-height: 1.05;
-  letter-spacing: 0.01em;
+  line-height: 1.08;
+  letter-spacing: 0.04em;
   margin: 0;
-  color: var(--bone);
+  color: var(--ncku-maroon);
 }
 .scene__title em {
-  font-style: normal;
-  font-family: var(--ff-display-latin);
+  font-family: var(--ff-accent-italic);
   font-weight: 400;
   font-style: italic;
   color: var(--bone-dim);
@@ -324,7 +351,7 @@ a { color: inherit; text-decoration: none; }
   width: 60px; height: 90px;
   color: var(--phoenix);
   opacity: 0.22;
-  filter: drop-shadow(0 0 18px rgba(255, 90, 106, 0.45));
+  filter: drop-shadow(0 0 18px rgba(200, 66, 90, 0.45));
   pointer-events: none;
 }
 
@@ -362,8 +389,8 @@ a { color: inherit; text-decoration: none; }
   background-image: url("assets/img/campus-hero.jpg");
   background-size: cover;
   background-position: center 30%;
-  filter: saturate(0.55) contrast(1.05) brightness(0.55);
-  opacity: 0.5;
+  filter: saturate(0.4) contrast(0.95) brightness(1.06);
+  opacity: 0.22;
   z-index: -1;
   transform: translateY(var(--parallax, 0));
   transition: transform .15s linear;
@@ -374,9 +401,9 @@ a { color: inherit; text-decoration: none; }
   inset: 0;
   background:
     radial-gradient(circle at calc(var(--mx, 50%) * 1) calc(var(--my, 30%) * 1),
-      rgba(255, 90, 106, 0.45) 0%, transparent 35%),
-    linear-gradient(180deg, rgba(8, 5, 10, 0.4) 0%, var(--ink-0) 100%),
-    linear-gradient(90deg, rgba(8, 5, 10, 0.85) 0%, rgba(8, 5, 10, 0.2) 60%, rgba(42, 12, 25, 0.9) 100%);
+      rgba(163, 31, 52, 0.08) 0%, transparent 45%),
+    linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.35) 55%, var(--ink-0) 100%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0%, transparent 55%, rgba(66, 10, 21, 0.16) 100%);
 }
 .hero__content {
   position: relative;
@@ -394,9 +421,9 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: var(--phoenix-glow);
   padding: 0.4rem 0.85rem;
-  border: 1px solid rgba(255, 90, 106, 0.35);
+  border: 1px solid rgba(200, 66, 90, 0.35);
   border-radius: 999px;
-  background: rgba(255, 90, 106, 0.06);
+  background: rgba(200, 66, 90, 0.06);
   margin-bottom: 1.8rem;
 }
 .hero__kicker::before {
@@ -409,27 +436,27 @@ a { color: inherit; text-decoration: none; }
 
 .hero__title {
   font-family: var(--ff-display-cjk);
-  font-weight: 700;
+  font-weight: 300;
   font-size: clamp(3rem, 9vw, 7.5rem);
-  line-height: 0.96;
-  letter-spacing: -0.005em;
+  line-height: 1.0;
+  letter-spacing: 0.02em;
   margin: 0 0 1.5rem;
-  color: var(--bone);
+  color: var(--ncku-maroon);
   max-width: 14ch;
 }
 .hero__title .accent {
-  font-family: var(--ff-display-latin);
+  font-family: var(--ff-accent-italic);
   font-style: italic;
-  font-weight: 300;
-  background: linear-gradient(120deg, var(--phoenix-glow), var(--coral));
+  font-weight: 400;
+  background: linear-gradient(120deg, var(--ncku-red-soft), var(--ncku-red));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 .hero__sub {
-  font-family: var(--ff-display-latin);
+  font-family: var(--ff-accent-italic);
   font-style: italic;
-  font-weight: 300;
+  font-weight: 400;
   font-size: clamp(1rem, 1.6vw, 1.3rem);
   letter-spacing: 0.02em;
   color: var(--bone-dim);
@@ -443,22 +470,20 @@ a { color: inherit; text-decoration: none; }
   gap: 0.9rem;
   padding: 1rem 1.8rem;
   border-radius: 999px;
-  background: linear-gradient(120deg, var(--phoenix), var(--phoenix-glow));
-  color: var(--bone);
+  background: linear-gradient(120deg, var(--ncku-red), var(--ncku-red-soft));
+  color: #ffffff;
   font-size: 0.95rem;
   letter-spacing: 0.05em;
   font-weight: 500;
   box-shadow:
-    0 12px 32px -8px rgba(201, 42, 58, 0.6),
-    0 0 24px rgba(255, 90, 106, 0.3),
+    0 12px 24px -10px rgba(163, 31, 52, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
   transition: transform .25s var(--ease), box-shadow .25s var(--ease);
 }
 .hero__cta:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 16px 40px -8px rgba(201, 42, 58, 0.8),
-    0 0 36px rgba(255, 90, 106, 0.5),
+    0 16px 30px -10px rgba(163, 31, 52, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 .hero__cta svg { width: 16px; height: 16px; }
@@ -523,14 +548,14 @@ a { color: inherit; text-decoration: none; }
   transform: translateX(-50%);
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 45%, rgba(255, 90, 106, 0.55) 0%, rgba(201, 42, 58, 0.3) 35%, transparent 65%);
-  filter: blur(26px);
+    radial-gradient(circle at 50% 45%, rgba(163, 31, 52, 0.10) 0%, rgba(166, 169, 171, 0.18) 45%, transparent 78%);
+  filter: blur(28px);
   z-index: -2;
   animation: bloom 7s ease-in-out infinite;
 }
 @keyframes bloom {
-  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.85; }
-  50% { transform: translateX(-50%) scale(1.06); opacity: 1; }
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; }
+  50% { transform: translateX(-50%) scale(1.04); opacity: 1; }
 }
 .president__portrait::after {
   content: "";
@@ -541,8 +566,7 @@ a { color: inherit; text-decoration: none; }
   left: 50%;
   transform: translateX(-50%);
   border-radius: 50%;
-  border: 1px solid rgba(255, 90, 106, 0.35);
-  box-shadow: inset 0 0 80px rgba(8, 5, 10, 0.4);
+  border: 1px solid rgba(163, 31, 52, 0.22);
   z-index: -1;
   pointer-events: none;
 }
@@ -551,7 +575,7 @@ a { color: inherit; text-decoration: none; }
   height: 100%;
   object-fit: contain;
   object-position: bottom center;
-  filter: saturate(0.85) contrast(1.05) brightness(0.95) drop-shadow(0 24px 30px rgba(0, 0, 0, 0.5));
+  filter: saturate(0.95) contrast(1.0) brightness(1.0) drop-shadow(0 18px 24px rgba(0, 0, 0, 0.18));
 }
 .president__caption {
   margin-top: 1.5rem;
@@ -569,20 +593,20 @@ a { color: inherit; text-decoration: none; }
   font-size: 1rem;
   letter-spacing: 0.05em;
   text-transform: none;
-  color: var(--bone);
+  color: var(--ncku-maroon);
   margin-bottom: 0.3rem;
 }
 
 .president__quote {
-  font-family: var(--ff-display-cjk);
-  font-weight: 700;
+  font-family: var(--ff-accent-italic);
+  font-weight: 600;
   font-size: clamp(1.5rem, 2.5vw, 2.1rem);
-  line-height: 1.5;
-  letter-spacing: 0.01em;
-  color: var(--bone);
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  color: var(--ncku-maroon);
   position: relative;
   padding-left: 2rem;
-  border-left: 1px solid var(--phoenix);
+  border-left: 2px solid var(--ncku-red);
   margin: 0 0 2rem;
 }
 .president__quote::before {
@@ -590,9 +614,9 @@ a { color: inherit; text-decoration: none; }
   position: absolute;
   left: -0.4rem; top: -1.5rem;
   font-size: 4rem;
-  color: var(--phoenix-glow);
+  color: var(--ncku-red-soft);
   opacity: 0.6;
-  font-family: var(--ff-display-cjk);
+  font-family: var(--ff-accent-italic);
   line-height: 1;
 }
 .president__excerpt p {
@@ -642,7 +666,7 @@ a { color: inherit; text-decoration: none; }
 .president__expand:hover {
   border-color: var(--phoenix-glow);
   color: var(--bone);
-  background: rgba(255, 90, 106, 0.07);
+  background: rgba(200, 66, 90, 0.07);
 }
 .president__expand .arrow { transition: transform .35s var(--ease); }
 .president__expand.is-open .arrow { transform: rotate(180deg); }
@@ -675,10 +699,10 @@ a { color: inherit; text-decoration: none; }
 }
 .schedule__filter button:hover { border-color: var(--bone-dim); color: var(--bone); }
 .schedule__filter button.is-active {
-  background: linear-gradient(120deg, var(--phoenix), var(--phoenix-glow));
+  background: linear-gradient(120deg, var(--ncku-red), var(--ncku-red-soft));
   border-color: transparent;
-  color: var(--bone);
-  box-shadow: 0 0 24px rgba(255, 90, 106, 0.35);
+  color: #ffffff;
+  box-shadow: 0 8px 18px -8px rgba(163, 31, 52, 0.45);
 }
 .schedule__hint {
   margin-left: auto;
@@ -705,7 +729,7 @@ a { color: inherit; text-decoration: none; }
   cursor: pointer;
   transition: background .25s var(--ease);
 }
-.schedule__row:hover { background: rgba(255, 90, 106, 0.03); }
+.schedule__row:hover { background: rgba(200, 66, 90, 0.03); }
 .schedule__row::before {
   content: "";
   position: absolute;
@@ -718,8 +742,8 @@ a { color: inherit; text-decoration: none; }
 .schedule__dot {
   width: 11px; height: 11px;
   border-radius: 50%;
-  background: var(--ink-2);
-  border: 1px solid var(--phoenix);
+  background: #ffffff;
+  border: 1.5px solid var(--ncku-red);
   margin: 0.4rem 0 0 32px;
   position: relative;
   z-index: 1;
@@ -727,8 +751,8 @@ a { color: inherit; text-decoration: none; }
 }
 .schedule__row:hover .schedule__dot,
 .schedule__row.is-open .schedule__dot {
-  background: var(--phoenix-glow);
-  box-shadow: 0 0 16px var(--phoenix-glow);
+  background: var(--ncku-red);
+  box-shadow: 0 0 0 4px rgba(163, 31, 52, 0.12);
 }
 .schedule__main { min-width: 0; }
 .schedule__time {
@@ -743,7 +767,7 @@ a { color: inherit; text-decoration: none; }
   font-family: var(--ff-display-cjk);
   font-weight: 600;
   font-size: 1.2rem;
-  color: var(--bone);
+  color: var(--ncku-maroon);
   margin: 0;
   letter-spacing: 0.02em;
   display: flex;
@@ -807,21 +831,21 @@ a { color: inherit; text-decoration: none; }
   padding: 1.75rem;
   border: 1px solid var(--rule);
   border-radius: 16px;
-  background:
-    linear-gradient(180deg, rgba(20, 8, 15, 0.5), rgba(20, 8, 15, 0.2));
+  background: linear-gradient(180deg, var(--ink-1) 0%, #ffffff 60%);
   position: relative;
   overflow: hidden;
-  transition: border-color .35s var(--ease), transform .35s var(--ease);
+  transition: border-color .35s var(--ease), transform .35s var(--ease), box-shadow .35s var(--ease);
 }
 .thread:hover {
-  border-color: rgba(255, 90, 106, 0.35);
+  border-color: var(--ncku-red);
   transform: translateY(-4px);
+  box-shadow: 0 18px 30px -22px rgba(163, 31, 52, 0.30);
 }
 .thread::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 100% 0%, rgba(255, 90, 106, 0.10) 0%, transparent 60%);
+  background: radial-gradient(circle at 100% 0%, rgba(163, 31, 52, 0.06) 0%, transparent 60%);
   opacity: 0;
   transition: opacity .4s var(--ease);
   pointer-events: none;
@@ -876,8 +900,8 @@ a { color: inherit; text-decoration: none; }
 .thread__list li.is-link:hover { padding-left: 0.4rem; color: var(--bone); }
 .thread__list li.is-link:hover::before { transform: translateX(4px); }
 .thread__list li.is-accent {
-  color: var(--coral);
-  font-family: var(--ff-display-latin);
+  color: var(--ncku-gold);
+  font-family: var(--ff-accent-italic);
   font-style: italic;
   font-size: 1rem;
 }
@@ -903,13 +927,13 @@ a { color: inherit; text-decoration: none; }
   padding: 1rem 1.4rem;
   border: 1px solid var(--rule);
   border-radius: 999px;
-  background: rgba(20, 8, 15, 0.4);
+  background: #ffffff;
   transition: border-color .25s var(--ease), background .25s var(--ease);
 }
 .faq__search:focus-within {
   border-color: var(--phoenix-glow);
-  background: rgba(255, 90, 106, 0.04);
-  box-shadow: 0 0 0 4px rgba(255, 90, 106, 0.08);
+  background: rgba(200, 66, 90, 0.04);
+  box-shadow: 0 0 0 4px rgba(200, 66, 90, 0.08);
 }
 .faq__search svg { width: 18px; height: 18px; color: var(--phoenix-glow); }
 .faq__search input {
@@ -948,11 +972,11 @@ a { color: inherit; text-decoration: none; }
 .faq__hot button:hover {
   border-color: var(--phoenix-glow);
   color: var(--bone);
-  background: rgba(255, 90, 106, 0.06);
+  background: rgba(200, 66, 90, 0.06);
 }
 .faq__cat {
   padding: 0.55rem 1rem;
-  background: rgba(20, 8, 15, 0.5);
+  background: #ffffff;
   border: 1px solid var(--rule);
   border-radius: 999px;
   color: var(--bone-dim);
@@ -971,7 +995,7 @@ a { color: inherit; text-decoration: none; }
   border-bottom: 1px solid var(--rule-soft);
   transition: background .2s var(--ease);
 }
-.faq__item:hover { background: rgba(255, 90, 106, 0.03); }
+.faq__item:hover { background: rgba(200, 66, 90, 0.03); }
 .faq__bar {
   display: flex; align-items: center; gap: 1rem;
   padding: 1.15rem 0.4rem;
@@ -1045,8 +1069,8 @@ a { color: inherit; text-decoration: none; }
 .footer {
   margin-top: 4rem;
   padding: 4rem var(--gutter) 3rem;
-  border-top: 1px solid var(--rule-soft);
-  background: linear-gradient(180deg, transparent 0%, rgba(8, 5, 10, 0.8) 100%);
+  border-top: 2px solid var(--ncku-gold);   /* gold rule like the live web.ncku.edu.tw utility strip */
+  background: linear-gradient(180deg, var(--ink-1) 0%, var(--ink-2) 100%);
 }
 .footer__inner {
   max-width: 1200px;
@@ -1127,7 +1151,7 @@ a { color: inherit; text-decoration: none; }
     align-items: flex-end;
     gap: 0.4rem;
     padding: 1rem 1.2rem;
-    background: rgba(20, 8, 15, 0.96);
+    background: rgba(255, 255, 255, 0.96);
     border: 1px solid var(--rule);
     border-radius: 14px;
     backdrop-filter: blur(16px);
