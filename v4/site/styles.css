@@ -1,0 +1,1654 @@
+/* ============================================================
+   新生支持辦公室 v4
+   Stanford-banded layout · NCKU CIS palette
+   ------------------------------------------------------------
+   — One brand color (NCKU Red 201C / #A31F34) does the work.
+   — Bands alternate white / #F4F4F4 with no rules between them.
+   — Square corners everywhere (border-radius is BANNED at the
+     content layer; only the focus ring + a couple of tiny
+     decorative dots are allowed to round).
+   — No shadows on cards, no gradients, no glassmorphism.
+   — Typography: Noto Sans TC for everything; Noto Serif TC
+     reserved for the hero ceremonial wordmark + pull quote.
+     Section H2s are LIGHT weight (per NCKU brand book), at
+     enormous sizes — light at scale reads editorial, not timid.
+   ============================================================ */
+
+:root {
+  /* CIS palette (domestic — used by default for school-facing work) */
+  --ncku-red:        #A31F34;   /* Pantone 201C — primary */
+  --ncku-red-deep:   #7A1726;   /* hover / active darken */
+  --ncku-maroon:     #4A0E1B;   /* photo overlay tint */
+  --ncku-gold:       #8C6E4A;   /* supporting — utility strip accent only */
+  --ncku-grey:       #555559;   /* Cool Gray 11C */
+  --ncku-grey-mid:   #7A7A7E;
+  --ncku-grey-soft:  #B8B8BC;
+  --ncku-rule:       #D8D8DC;
+
+  /* Page surfaces */
+  --ink:             #1A1717;
+  --ink-soft:        #34302F;
+  --paper:           #FFFFFF;
+  --band:            #F4F4F4;
+  --band-edge:       #E8E8E8;
+
+  /* Type stacks */
+  --font-sans: "Noto Sans TC", "Noto Sans", "PingFang TC",
+               "Microsoft JhengHei", system-ui, sans-serif;
+  --font-serif: "Noto Serif TC", "Noto Serif", Georgia,
+                "Songti TC", serif;
+
+  /* Layout tokens */
+  --max-w:        1180px;
+  --max-w-wide:   1380px;
+  --gutter:       40px;
+
+  /* Sticky chrome heights */
+  --utility-h: 36px;
+  --nav-h:     76px;
+  --chrome-h:  112px;       /* utility + nav */
+}
+
+/* ---------------- reset + globals ---------------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--chrome-h);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; background: none; border: 0; cursor: pointer; color: inherit; padding: 0; }
+ul, ol { list-style: none; padding: 0; margin: 0; }
+table { border-collapse: collapse; }
+
+/* Universal focus ring — first-class for keyboard users */
+:focus-visible {
+  outline: 2px solid var(--ncku-red);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--ncku-red);
+  color: #fff;
+}
+
+.skip-link {
+  position: fixed;
+  top: -100px; left: 8px;
+  z-index: 9999;
+  background: var(--ncku-red);
+  color: #fff;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: top .25s;
+}
+.skip-link:focus { top: 8px; }
+
+/* ============================================================
+   CHROME — utility bar + primary nav
+   Two-row sticky header in the Stanford pattern:
+     Row 1: red utility strip (institutional, info-for nav)
+     Row 2: white primary nav (logo + section nav)
+   ============================================================ */
+.utility-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--utility-h);
+  background: var(--ncku-red);
+  color: #fff;
+  z-index: 1000;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--ncku-gold);
+}
+.utility-inner {
+  height: 100%;
+  max-width: var(--max-w-wide);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.utility-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  transition: opacity .2s;
+}
+.utility-brand:hover { opacity: .82; }
+.utility-brand .en {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: .82;
+  letter-spacing: .06em;
+}
+.utility-nav {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 22px;
+  white-space: nowrap;
+}
+.utility-label {
+  font-size: 10.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.7);
+  font-weight: 600;
+}
+.utility-nav a {
+  position: relative;
+  padding: 2px 0;
+  transition: opacity .2s;
+}
+.utility-nav a:hover { opacity: .78; }
+.utility-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: #fff;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .25s ease;
+}
+.utility-nav a:hover::after { transform: scaleX(1); }
+
+.primary-nav {
+  position: fixed;
+  top: var(--utility-h);
+  left: 0; right: 0;
+  height: var(--nav-h);
+  background: #fff;
+  z-index: 999;
+  /* Soft, delayed shadow appears once content scrolls under */
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+  transition: box-shadow .5s ease .25s;
+}
+.primary-nav.shadow {
+  box-shadow: 0 6px 18px rgba(20, 14, 10, .07);
+}
+.nav-inner {
+  height: 100%;
+  max-width: var(--max-w-wide);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.brand img {
+  width: 44px; height: 44px;
+}
+.brand-text {
+  display: flex; flex-direction: column;
+  line-height: 1.15;
+}
+.brand-text strong {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--ncku-red);
+  letter-spacing: .03em;
+}
+.brand-text span {
+  font-size: 11px;
+  color: var(--ncku-grey);
+  letter-spacing: .08em;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+
+#mainNav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  font-size: 14.5px;
+  font-weight: 500;
+}
+#mainNav a {
+  position: relative;
+  padding: 26px 0;
+  color: var(--ink);
+  letter-spacing: .04em;
+  transition: color .2s;
+}
+#mainNav a::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 18px;
+  height: 2px;
+  background: var(--ncku-red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .28s ease;
+}
+#mainNav a:hover { color: var(--ncku-red); }
+#mainNav a:hover::after,
+#mainNav a.is-current::after { transform: scaleX(1); }
+
+.nav-toggle {
+  display: none;
+  width: 44px; height: 44px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.nav-toggle span {
+  display: block;
+  width: 22px; height: 2px;
+  background: var(--ink);
+  transition: transform .25s, opacity .25s;
+}
+.nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 1024px) {
+  :root { --gutter: 28px; }
+  #mainNav {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    background: #fff;
+    padding: 6px 0 12px;
+    border-top: 1px solid var(--band-edge);
+    box-shadow: 0 16px 24px rgba(20, 14, 10, .08);
+  }
+  #mainNav.open { display: flex; }
+  #mainNav a {
+    padding: 16px 28px;
+    font-size: 16px;
+    border-bottom: 1px solid var(--band-edge);
+  }
+  #mainNav a::after { display: none; }
+  .nav-toggle { display: flex; }
+}
+@media (max-width: 640px) {
+  :root { --utility-h: 32px; --nav-h: 64px; --chrome-h: 96px; --gutter: 20px; }
+  .utility-brand .en { display: none; }
+  .utility-label { display: none; }
+  .utility-nav { gap: 14px; font-size: 11.5px; }
+  .brand-text strong { font-size: 14px; }
+  .brand-text span { font-size: 10px; }
+  .brand img { width: 36px; height: 36px; }
+}
+
+/* ============================================================
+   HERO
+   Photography-first. Deep maroon flat overlay (no gradient
+   theatrics — Stanford keeps it flat). Ceremonial serif
+   wordmark centred. Subtle 8-cell square grid hairline
+   referencing the NCKU international brand grid system.
+   Cardinal-red CTA bar pinned to the bottom.
+   ============================================================ */
+.hero {
+  position: relative;
+  margin-top: var(--chrome-h);
+  height: calc(100vh - var(--chrome-h));
+  min-height: 620px;
+  max-height: 820px;
+  overflow: hidden;
+  background: var(--ncku-maroon);
+  isolation: isolate;
+  color: #fff;
+}
+.hero-photo {
+  position: absolute; inset: 0;
+  z-index: 0;
+}
+.hero-photo img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  /* Source banners ship with marketing text on the LEFT side.
+     Pin to the right edge so we only see the clean campus
+     photography (flagpoles + palm boulevard) on the right. */
+  object-position: 100% center;
+  filter: saturate(.85) contrast(1.05);
+}
+.hero-veil {
+  position: absolute; inset: 0;
+  z-index: 1;
+  background: rgba(74, 14, 27, .82);
+}
+.hero-veil::before {
+  /* Left-edge wash — kills any residual text bleed-through from
+     the source banner, since the cropped photo still drifts left
+     on narrow viewports. */
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg,
+      rgba(26, 8, 14, .55) 0%,
+      rgba(26, 8, 14, .25) 28%,
+      rgba(26, 8, 14, 0) 50%);
+}
+.hero-veil::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(26, 23, 23, .10) 0%,
+      rgba(26, 23, 23, .05) 50%,
+      rgba(26, 23, 23, .40) 100%);
+}
+
+/* Hairline 8-cell grid scaffold — invisible, structural reference.
+   Captures the NCKU international "square-cell grid" device. */
+.hero-grid {
+  position: absolute; inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px);
+  background-size: 12.5% 12.5%;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 var(--gutter);
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.86);
+  margin-bottom: 38px;
+}
+.hero-eyebrow i {
+  display: inline-block;
+  width: 36px; height: 1px;
+  background: rgba(255,255,255,.55);
+}
+
+.hero-mark {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(4.6rem, 13vw, 11rem);
+  line-height: .92;
+  letter-spacing: -.02em;
+  color: #fff;
+  text-shadow: 0 2px 32px rgba(0,0,0,.18);
+}
+.hero-mark-amp {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-style: italic;
+  color: rgba(255,255,255,.55);
+  margin: 0 .12em;
+  font-size: .55em;
+  vertical-align: .12em;
+}
+
+.hero-sub {
+  margin: 36px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .42em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.92);
+  position: relative;
+  padding-top: 26px;
+}
+.hero-sub::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 1px; height: 14px;
+  background: rgba(255,255,255,.55);
+}
+
+/* Tiny meta strip floating on the lower-left of the hero — the
+   "EST. 1931 / 入學 8/22 / 開學 9/8" stat ribbon, very small,
+   monospace-feeling, anchors the hero to the calendar story. */
+.hero-meta {
+  position: absolute;
+  left: var(--gutter);
+  bottom: 100px;
+  z-index: 3;
+  display: inline-flex;
+  gap: 32px;
+  padding: 0;
+}
+.hero-meta-item {
+  display: flex;
+  flex-direction: column;
+  font-variant-numeric: tabular-nums;
+  border-left: 1px solid rgba(255,255,255,.45);
+  padding-left: 14px;
+}
+.meta-k {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.7);
+}
+.meta-v {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -.01em;
+  color: #fff;
+  margin-top: 4px;
+}
+
+.hero-cta {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 4;
+  background: var(--ncku-red);
+  color: #fff;
+  padding: 22px var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  transition: background .3s ease-out;
+}
+.hero-cta:hover { background: var(--ncku-red-deep); }
+.hero-cta .arrow { transition: transform .3s ease; display: inline-block; }
+.hero-cta:hover .arrow { transform: translateX(8px); }
+
+@media (max-width: 720px) {
+  .hero { min-height: 520px; }
+  .hero-eyebrow { font-size: 10.5px; gap: 12px; margin-bottom: 24px; }
+  .hero-eyebrow i { width: 22px; }
+  .hero-meta { bottom: 92px; gap: 18px; }
+  .meta-v { font-size: 17px; }
+  .meta-k { font-size: 9.5px; }
+  .hero-cta { padding: 18px 20px; font-size: 14.5px; }
+  .hero-sub { font-size: 11.5px; letter-spacing: .3em; }
+}
+
+/* ============================================================
+   BANDS — generic vertical rhythm
+   Alternating white / #F4F4F4 sections; no rules, no shadows.
+   ============================================================ */
+.band {
+  padding: 130px 0;
+  background: var(--paper);
+}
+.band.band-grey { background: var(--band); }
+.band-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  text-align: center;
+}
+.band-inner-wide { max-width: var(--max-w-wide); }
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .35em;
+  color: var(--ncku-red);
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+.kicker-num {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 0;
+  color: var(--ncku-red);
+}
+.kicker i {
+  display: inline-block;
+  width: 26px; height: 1px;
+  background: var(--ncku-red);
+  opacity: .7;
+}
+
+.band-title {
+  margin: 0 auto;
+  font-family: var(--font-sans);
+  font-weight: 300;        /* NCKU brand: Light is the headline weight */
+  font-size: clamp(2.8rem, 5.6vw, 5.2rem);
+  line-height: 1.05;
+  letter-spacing: -.025em;
+  color: var(--ink);
+  max-width: 18ch;
+}
+.band-sub {
+  margin: 32px auto 0;
+  max-width: 58ch;
+  font-size: 17.5px;
+  color: var(--ncku-grey);
+  line-height: 1.7;
+}
+
+.band-cta-row {
+  margin-top: 96px;
+  display: flex;
+  justify-content: center;
+}
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--ncku-red);
+  color: #fff;
+  padding: 16px 32px;
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  border: 1px solid var(--ncku-red);
+  text-transform: uppercase;
+  transition: background .3s ease-out, border-color .3s, color .3s;
+}
+.cta::after {
+  content: "→";
+  font-weight: 400;
+  transition: transform .3s ease;
+}
+.cta:hover {
+  background: var(--ncku-red-deep);
+  border-color: var(--ncku-red-deep);
+}
+.cta:hover::after { transform: translateX(6px); }
+
+.cta-secondary {
+  background: transparent;
+  color: var(--ncku-red);
+}
+.cta-secondary:hover {
+  background: var(--ncku-red);
+  color: #fff;
+}
+
+@media (max-width: 720px) {
+  .band { padding: 80px 0; }
+  .band-cta-row { margin-top: 64px; }
+}
+
+/* ============================================================
+   SECTION 01 — INFO CARDS
+   Three full-bleed photo cards. Editorial photography behind a
+   deep maroon overlay (Stanford-pattern card). White headline,
+   eyebrow label, hand-curated bullet list, "see more" link.
+   ============================================================ */
+.info-grid {
+  margin-top: 88px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  text-align: left;
+}
+.info-card {
+  position: relative;
+  isolation: isolate;
+  min-height: 520px;
+  display: flex;
+  background: var(--ncku-maroon);
+  color: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background .35s ease;
+}
+.info-card:hover { background: #3A0812; }
+/* Active state — a sharp Cardinal-red strip across the top, plus a
+   bottom strip that visually points down to the detail panel below. */
+.info-card.is-active::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--ncku-red);
+  z-index: 5;
+}
+.info-card.is-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--ncku-red);
+  z-index: 5;
+}
+.info-card:nth-child(2) { background: #4D101D; }
+.info-card:nth-child(2):hover { background: #3D0915; }
+.info-card:nth-child(3) { background: #501320; }
+.info-card:nth-child(3):hover { background: #400A18; }
+
+/* Giant calligraphic Chinese character watermark — 學 / 活 / 力.
+   Sits behind everything in faint white, asymmetric position,
+   provides typographic identity instead of photography. */
+.info-card__glyph {
+  position: absolute;
+  right: -8%;
+  bottom: -18%;
+  z-index: 0;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 32rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, .055);
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -.05em;
+  transition: transform 1.2s cubic-bezier(.2,.7,.2,1), color .35s ease;
+}
+.info-card:hover .info-card__glyph {
+  color: rgba(255, 255, 255, .085);
+  transform: translate(-6px, -10px) rotate(-2deg);
+}
+
+.info-card__inner {
+  position: relative;
+  z-index: 2;
+  padding: 38px 34px 32px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.info-card__num {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 60px;
+  line-height: 1;
+  letter-spacing: -.04em;
+  color: rgba(255,255,255,.32);
+  margin-bottom: 24px;
+}
+.info-card__label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: .92;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,.38);
+  margin-bottom: 22px;
+}
+.info-card__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.2;
+  letter-spacing: -.015em;
+  color: #fff;
+}
+.info-card__list {
+  margin: 26px 0 28px;
+  font-size: 15px;
+  font-weight: 400;
+  color: #fff;
+  opacity: .92;
+  display: flex;
+  flex-direction: column;
+}
+.info-card__list li {
+  padding: 11px 0;
+  border-top: 1px solid rgba(255,255,255,.18);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.info-card__list li::before {
+  content: counter(item, decimal-leading-zero);
+  counter-increment: item;
+  font-family: var(--font-serif);
+  font-size: 12px;
+  color: rgba(255,255,255,.55);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  min-width: 22px;
+}
+.info-card__list { counter-reset: item; }
+
+.info-card__link {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: #fff;
+  border-top: 1px solid rgba(255,255,255,.4);
+  padding-top: 22px;
+  align-self: stretch;
+  justify-content: space-between;
+}
+.info-card__link::after {
+  content: "→";
+  font-size: 18px;
+  font-weight: 400;
+  transition: transform .25s ease;
+}
+.info-card:hover .info-card__link::after { transform: translateX(6px); }
+
+/* Open / close label swap — driven by .is-active on the parent card. */
+.info-card__link .label-close { display: none; }
+.info-card.is-active .info-card__link .label-open { display: none; }
+.info-card.is-active .info-card__link .label-close { display: inline; }
+.info-card.is-active .info-card__link::after { content: "×"; font-size: 22px; }
+.info-card.is-active:hover .info-card__link::after { transform: rotate(90deg); }
+
+@media (max-width: 1024px) {
+  .info-grid { grid-template-columns: repeat(2, 1fr); }
+  .info-card:nth-child(3) { grid-column: 1 / -1; }
+}
+@media (max-width: 720px) {
+  .info-grid { grid-template-columns: 1fr; gap: 16px; }
+  .info-card { min-height: 380px; }
+  .info-card:nth-child(3) { grid-column: auto; }
+  .info-card__title { font-size: 26px; }
+  .info-card__num { font-size: 48px; margin-bottom: 16px; }
+}
+
+/* ============================================================
+   INFO DETAIL PANEL
+   Opens below the card grid when a 深入了解 link is activated.
+   Editorial 3-column layout that mirrors the v0 sidebar's
+   sub-section structure (學業 / 生活 / 培力 each carry 3 sub-cards
+   of curated items, some "link" type, some plain).
+   ============================================================ */
+.info-detail {
+  margin-top: 28px;
+  background: #fff;
+  border-top: 4px solid var(--ncku-red);
+  text-align: left;
+  animation: detailFadeIn .4s cubic-bezier(.2,.7,.2,1) both;
+}
+.info-detail[hidden] { display: none; }
+@keyframes detailFadeIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.info-detail__inner {
+  padding: 48px 48px 56px;
+}
+.info-detail__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ncku-rule);
+  padding-bottom: 28px;
+  margin-bottom: 40px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.info-detail__eyebrow {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 18px;
+}
+.info-detail__num {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 40px;
+  color: var(--ncku-red);
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.info-detail__pillar {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--ncku-grey);
+}
+.info-detail__close {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ncku-red);
+  border: 1px solid var(--ncku-red);
+  padding: 11px 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: background .25s, color .25s;
+}
+.info-detail__close:hover {
+  background: var(--ncku-red);
+  color: #fff;
+}
+
+.info-detail__cols {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+}
+.info-detail__col {
+  padding: 0 36px;
+  border-right: 1px solid var(--ncku-rule);
+  min-width: 0;
+}
+.info-detail__col:first-child { padding-left: 0; }
+.info-detail__col:last-child  { padding-right: 0; border-right: 0; }
+
+.info-detail__col-head {
+  margin: 0 0 20px;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: .015em;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.info-detail__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.info-detail__item {
+  position: relative;
+  padding: 14px 28px 14px 0;
+  border-bottom: 1px solid var(--ncku-rule);
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.info-detail__item:last-child { border-bottom: 0; }
+.info-detail__item.is-link {
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 500;
+  transition: color .2s, padding-left .25s;
+}
+.info-detail__item.is-link:hover {
+  color: var(--ncku-red);
+  padding-left: 6px;
+}
+.info-detail__item.is-link::after {
+  content: "→";
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ncku-red);
+  opacity: .55;
+  font-size: 16px;
+  transition: transform .25s, opacity .2s;
+}
+.info-detail__item.is-link:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(4px);
+}
+.info-detail__item.is-accent {
+  color: var(--ncku-red);
+  font-weight: 600;
+  letter-spacing: .03em;
+}
+
+/* Nested sub-card (e.g. "Overseas Students" under 獎助學金) */
+.info-detail__sub {
+  margin-top: 28px;
+  padding: 18px 18px 8px;
+  background: rgba(163, 31, 52, .04);
+  border: 1px dashed rgba(163, 31, 52, .35);
+}
+.info-detail__sub-head {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 17px;
+  color: var(--ncku-red);
+  letter-spacing: -.005em;
+}
+.info-detail__items--sub .info-detail__item {
+  border-bottom: 0;
+  padding: 6px 0;
+  font-size: 13.5px;
+}
+
+@media (max-width: 1024px) {
+  .info-detail__cols { grid-template-columns: 1fr; gap: 32px; }
+  .info-detail__col {
+    padding: 0 0 28px;
+    border-right: 0;
+    border-bottom: 1px solid var(--ncku-rule);
+  }
+  .info-detail__col:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+}
+@media (max-width: 720px) {
+  .info-detail__inner { padding: 32px 24px 36px; }
+  .info-detail__num { font-size: 32px; }
+  .info-detail__pillar { font-size: 11px; letter-spacing: .25em; }
+  .info-detail__close { padding: 9px 16px; font-size: 11.5px; }
+}
+
+/* ============================================================
+   SECTION 02 — PRESIDENT
+   Editorial two-up: portrait left (sticky on desktop) / text right.
+   Justified Chinese body. Cardinal-red serif pull quote.
+   ============================================================ */
+.president-grid {
+  margin-top: 88px;
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  gap: 80px;
+  text-align: left;
+  align-items: start;
+}
+.president-photo {
+  margin: 0;
+  position: sticky;
+  top: 144px;
+}
+.president-photo-frame {
+  position: relative;
+  background: var(--paper);
+  padding: 28px 28px 0;
+  /* Cardinal-red corner brackets — Stanford-style framing for a
+     ceremonial portrait, matches the editorial tone. */
+}
+.president-photo-frame::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 56px; height: 56px;
+  border-top: 2px solid var(--ncku-red);
+  border-left: 2px solid var(--ncku-red);
+  z-index: 2;
+}
+.president-photo-frame::after {
+  content: "";
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 56px; height: 56px;
+  border-bottom: 2px solid var(--ncku-red);
+  border-right: 2px solid var(--ncku-red);
+  z-index: 2;
+}
+.president-photo-frame img {
+  width: 100%; height: auto;
+  display: block;
+  filter: contrast(1.02) saturate(.95);
+}
+.president-photo figcaption {
+  margin-top: 22px;
+  font-size: 13px;
+  color: var(--ncku-grey);
+  letter-spacing: .04em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.president-photo figcaption strong {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: .03em;
+}
+.president-photo figcaption span {
+  font-size: 11.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ncku-grey-mid);
+}
+
+.president-text {
+  font-size: 17px;
+  line-height: 1.95;
+  color: var(--ink-soft);
+  text-align: justify;
+  text-justify: inter-ideograph;
+  hanging-punctuation: allow-end;
+  max-width: 64ch;
+}
+.president-text .lead {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 30px;
+  line-height: 1.45;
+  color: var(--ink);
+  margin: 0 0 36px;
+  letter-spacing: -.005em;
+  text-align: left;
+}
+.president-text > p {
+  margin: 0 0 24px;
+}
+.president-text blockquote {
+  margin: 40px 0;
+  padding: 28px 0 28px 32px;
+  border-left: 4px solid var(--ncku-red);
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.55;
+  color: var(--ncku-red);
+  letter-spacing: -.005em;
+  text-align: left;
+}
+.president-text .signoff {
+  margin-top: 48px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: var(--ncku-grey);
+  letter-spacing: .04em;
+  text-align: right;
+}
+.president-text .signoff-mark {
+  display: block;
+  width: 180px;
+  height: auto;
+  margin-left: auto;
+  margin-right: -8px;
+  /* The signature jpg is black-on-white; multiply blends it onto
+     the off-white band cleanly without the white box around it. */
+  mix-blend-mode: multiply;
+  opacity: .82;
+}
+
+@media (max-width: 900px) {
+  .president-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .president-photo {
+    position: static;
+    max-width: 320px;
+  }
+  .president-text .lead { font-size: 24px; }
+  .president-text blockquote { font-size: 19px; padding-left: 20px; margin: 28px 0; }
+}
+
+/* ============================================================
+   SECTION 03 — SCHEDULE (calendar)
+   Stat strip → tabs → plain editorial table. Square corners,
+   thin grey rules. Numbers in the # column live in serif as
+   little editorial markers.
+   ============================================================ */
+.stat-strip {
+  margin: 88px 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ncku-rule);
+  background: #fff;
+}
+.stat {
+  padding: 36px 18px 32px;
+  border-right: 1px solid var(--ncku-rule);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.stat:last-child { border-right: 0; }
+.stat b {
+  display: block;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: clamp(2.2rem, 4.2vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -.025em;
+  color: var(--ncku-red);
+  font-variant-numeric: tabular-nums;
+}
+.stat span {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ncku-grey);
+}
+@media (max-width: 720px) {
+  .stat-strip { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(2) { border-right: 0; }
+  .stat:nth-child(-n+2) { border-bottom: 1px solid var(--ncku-rule); }
+  .stat { padding: 24px 16px; }
+}
+
+.schedule-controls {
+  margin-top: 56px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+.who-tabs {
+  display: inline-flex;
+  border: 1px solid var(--ink);
+}
+.who-tab {
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--ink);
+  background: #fff;
+  border-right: 1px solid var(--ink);
+  transition: color .2s, background .2s;
+}
+.who-tab:last-child { border-right: 0; }
+.who-tab:hover { color: var(--ncku-red); }
+.who-tab.active {
+  background: var(--ink);
+  color: #fff;
+}
+.schedule-hint {
+  font-size: 13px;
+  color: var(--ncku-grey-mid);
+  letter-spacing: .04em;
+  font-style: italic;
+}
+
+.schedule-table-wrap {
+  margin-top: 24px;
+  overflow-x: auto;
+}
+.schedule-table {
+  width: 100%;
+  font-size: 14.5px;
+  text-align: left;
+  background: transparent;
+}
+.schedule-table thead th {
+  padding: 18px 16px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--ncku-grey);
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ncku-rule);
+  vertical-align: bottom;
+}
+.schedule-table tbody td {
+  padding: 24px 16px;
+  border-bottom: 1px solid var(--ncku-rule);
+  vertical-align: top;
+  color: var(--ink);
+  line-height: 1.6;
+}
+.schedule-table tbody tr {
+  transition: background-color .15s;
+}
+.schedule-table tbody tr:hover {
+  background: rgba(163, 31, 52, .04);
+}
+
+.t-num   { width: 64px; }
+.t-item  { width: 17%; }
+.t-time  { width: 14%; }
+.t-content { width: auto; }
+.t-dept  { width: 22%; }
+
+.cell-num {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ncku-red);
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+.cell-item {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: .01em;
+}
+.cell-item a {
+  position: relative;
+  display: inline;
+  background-image: linear-gradient(var(--ncku-red), var(--ncku-red));
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 2px;
+  transition: color .2s;
+}
+.cell-item a:hover { color: var(--ncku-red); }
+.cell-time {
+  color: var(--ncku-grey);
+  font-variant-numeric: tabular-nums;
+}
+.cell-content { color: var(--ink-soft); font-size: 14px; }
+.cell-content p { margin: 0 0 6px; }
+.cell-content p:last-child { margin: 0; }
+.cell-content .who-pill {
+  display: inline-block;
+  margin-top: 8px;
+  margin-right: 4px;
+  padding: 3px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--ncku-red);
+  border: 1px solid var(--ncku-red);
+}
+.cell-dept {
+  color: var(--ncku-grey);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .schedule-table thead { display: none; }
+  .schedule-table, .schedule-table tbody, .schedule-table tr, .schedule-table td {
+    display: block; width: auto !important;
+  }
+  .schedule-table tr {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--ncku-rule);
+    position: relative;
+  }
+  .schedule-table tr:hover { background: transparent; }
+  .schedule-table td {
+    padding: 4px 0 4px 92px;
+    border: 0;
+    position: relative;
+  }
+  .schedule-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    top: 6px; left: 0;
+    width: 80px;
+    font-size: 10.5px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--ncku-grey-mid);
+    font-weight: 700;
+  }
+  .schedule-table td.cell-num {
+    padding-left: 0;
+    margin-bottom: 6px;
+  }
+  .schedule-table td.cell-num::before { display: none; }
+}
+
+/* ============================================================
+   SECTION 04 — FAQ
+   Underline-style search input. Hot-keyword chips. Plain
+   editorial accordion list with cardinal-red toggle.
+   ============================================================ */
+.faq-controls {
+  margin-top: 88px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 820px;
+}
+.search-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  border-bottom: 2px solid var(--ink);
+  transition: border-color .25s;
+}
+.search-wrap:focus-within { border-color: var(--ncku-red); }
+.search-wrap input {
+  flex: 1;
+  padding: 18px 0 14px;
+  font: inherit;
+  font-size: 19px;
+  background: transparent;
+  border: 0; outline: 0;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: .01em;
+}
+.search-wrap input::placeholder {
+  color: var(--ncku-grey-mid);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.search-btn {
+  width: 56px;
+  font-size: 22px;
+  color: var(--ncku-red);
+  transition: transform .25s;
+}
+.search-btn:hover { transform: translateX(6px); }
+
+.hot-row, .cat-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.row-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--ncku-grey);
+  min-width: 56px;
+}
+.hot-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hot-keywords button {
+  padding: 7px 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--ncku-rule);
+  transition: color .2s, border-color .2s, background .2s;
+}
+.hot-keywords button:hover {
+  color: #fff;
+  background: var(--ncku-red);
+  border-color: var(--ncku-red);
+}
+.cat-row select {
+  font: inherit;
+  font-size: 14px;
+  padding: 9px 36px 9px 14px;
+  background: #fff;
+  border: 1px solid var(--ncku-rule);
+  border-radius: 0;
+  color: var(--ink);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23A31F34'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 18px;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.cat-row select:hover { border-color: var(--ncku-red); }
+.result-count {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ncku-grey-mid);
+  font-variant-numeric: tabular-nums;
+}
+
+.faq-list {
+  margin-top: 56px;
+  border-top: 1px solid var(--ink);
+  text-align: left;
+}
+.faq-item {
+  border-bottom: 1px solid var(--ncku-rule);
+  background: transparent;
+}
+.faq-bar {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 70px 160px 1fr 36px;
+  gap: 22px;
+  align-items: center;
+  padding: 26px 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s;
+}
+.faq-bar:hover { background: rgba(163, 31, 52, .04); }
+.faq-bar .qid {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ncku-grey);
+  letter-spacing: -.01em;
+  font-variant-numeric: tabular-nums;
+}
+.faq-bar .qcat {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ncku-red);
+  border-left: 2px solid var(--ncku-red);
+  padding-left: 12px;
+  line-height: 1.4;
+}
+.faq-bar .qtext {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.5;
+  letter-spacing: .005em;
+}
+.faq-bar .toggle {
+  font-size: 22px;
+  color: var(--ncku-red);
+  text-align: right;
+  font-weight: 300;
+  transition: transform .35s ease;
+}
+.faq-item.open .faq-bar .toggle { transform: rotate(45deg); }
+
+.faq-content {
+  display: none;
+  padding: 8px 36px 36px 252px;
+}
+.faq-item.open .faq-content { display: block; }
+.faq-content .answer {
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--ink-soft);
+}
+.faq-content .answer a {
+  color: var(--ncku-red);
+  border-bottom: 1px solid var(--ncku-red);
+}
+.faq-content .meta {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ncku-rule);
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ncku-grey-mid);
+  font-weight: 600;
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+.faq-content .meta b {
+  color: var(--ncku-grey);
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.faq-empty {
+  margin-top: 32px;
+  padding: 40px;
+  text-align: center;
+  color: var(--ncku-grey-mid);
+  font-size: 15px;
+  border: 1px solid var(--ncku-rule);
+  background: #fff;
+}
+
+@media (max-width: 720px) {
+  .faq-bar {
+    grid-template-columns: auto 1fr 30px;
+    grid-template-rows: auto auto;
+    gap: 8px 14px;
+    padding: 22px 4px;
+  }
+  .faq-bar .qid { grid-column: 1; grid-row: 1; font-size: 14px; }
+  .faq-bar .qcat { grid-column: 2; grid-row: 1; font-size: 10.5px; padding-left: 8px; }
+  .faq-bar .qtext { grid-column: 1 / -1; grid-row: 2; font-size: 16px; }
+  .faq-bar .toggle { grid-column: 3; grid-row: 1 / span 2; }
+  .faq-content { padding: 0 0 28px; }
+}
+
+/* ============================================================
+   FOOTER
+   White link grid, slim cardinal-red full-width band at the
+   very bottom (~80 px) — Stanford-style brand wash anchor.
+   ============================================================ */
+.footer {
+  background: #fff;
+  border-top: 1px solid var(--band-edge);
+}
+.footer-inner {
+  max-width: var(--max-w-wide);
+  margin: 0 auto;
+  padding: 80px var(--gutter) 36px;
+}
+.footer-cols {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 48px;
+}
+.footer-brand .footer-logo {
+  width: 60px; height: 60px;
+  margin-bottom: 18px;
+}
+.footer-brand .footer-name {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ncku-grey);
+}
+.footer-brand .footer-name strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: .03em;
+  margin-bottom: 4px;
+}
+.footer-brand .footer-meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ncku-grey);
+  line-height: 1.7;
+}
+.footer-tel {
+  display: inline-block;
+  margin-top: 4px;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--ink);
+  letter-spacing: -.005em;
+}
+
+.footer-col h4 {
+  margin: 0 0 22px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--ncku-red);
+}
+.footer-col ul li { margin-bottom: 12px; }
+.footer-col a {
+  font-size: 14.5px;
+  color: var(--ink);
+  letter-spacing: .01em;
+  transition: color .2s, padding-left .25s;
+}
+.footer-col a:hover {
+  color: var(--ncku-red);
+  padding-left: 4px;
+}
+
+.footer-baseline {
+  margin-top: 64px;
+  padding-top: 28px;
+  border-top: 1px solid var(--band-edge);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  font-size: 12.5px;
+  color: var(--ncku-grey-mid);
+}
+.footer-baseline a { color: var(--ncku-grey-mid); transition: color .2s; }
+.footer-baseline a:hover { color: var(--ncku-red); }
+.footer-baseline .dot { opacity: .55; }
+
+.footer-bar-red {
+  height: 80px;
+  background: var(--ncku-red);
+  border-top: 4px solid var(--ncku-gold);
+}
+
+@media (max-width: 900px) {
+  .footer-cols { grid-template-columns: 1fr 1fr; gap: 36px; }
+  .footer-brand { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .footer-cols { grid-template-columns: 1fr; gap: 32px; }
+}
+
+/* ============================================================
+   Reduced motion — honour the user.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
