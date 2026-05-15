@@ -1,0 +1,1715 @@
+/* =================================================================
+   v3_2 — 新生支持辦公室 · banded NCKU treatment
+   -----------------------------------------------------------------
+   Same cinematic structure as v3, but red moves from a thin accent
+   to a structural element: gold utility strip + solid NCKU-red
+   topbar (like web.ncku.edu.tw), red divider band, maroon panel
+   behind the President's letter, and a maroon footer. White is still
+   the dominant body surface — red lives in the chrome and the punch.
+   ================================================================= */
+
+:root {
+  /* === Surfaces — white-majority body, banded with red === */
+  --paper:        #ffffff;          /* page background */
+  --paper-warm:   #faf6f3;          /* subtle warm card surface */
+  --paper-soft:   #f3eeeb;          /* soft band background */
+  --ink-1:        #f7f6f7;          /* light silver tint */
+  --ink-2:        #ececee;          /* light silver — card surfaces */
+
+  /* === NCKU palette === */
+  --ncku-red:      #a31f34;          /* PANTONE 201C — Signature Red */
+  --ncku-red-deep: #8b1929;          /* a half-stop deeper, for gradient bottoms */
+  --ncku-red-soft: #c8425a;          /* tint, used SPARINGLY for highlights */
+  --ncku-maroon:   #420a15;          /* International Maroon — deep panel */
+  --ncku-maroon-2: #2a060d;          /* near-black warm — gradient anchor */
+  --ncku-gold:     #8c6e4a;          /* PANTONE 874C — heritage strip */
+  --ncku-gold-2:   #b48f5e;          /* lifted gold for utility-strip background */
+  --ncku-silver:   #a6a9ab;          /* PANTONE 877C */
+  --ncku-dark-grey:#555559;          /* PANTONE Cool Gray 11C — body text */
+
+  /* === Reserved — Phoenix flower mark only (never as UI accent) === */
+  --phoenix-flower: #e4002b;
+
+  /* === Type colors on light surfaces === */
+  --bone:      #2a060d;             /* primary text — leaning maroon-black for NCKU character */
+  --bone-mid:  #555559;             /* body — Cool Gray 11C */
+  --bone-dim:  #7a7a7e;             /* secondary */
+  --bone-mute: #a6a9ab;             /* tertiary / micro labels — Silver */
+
+  /* === Type colors on maroon surfaces === */
+  --paper-soft-on-maroon: rgba(255, 245, 240, 0.92);
+  --paper-mute-on-maroon: rgba(255, 245, 240, 0.62);
+
+  --rule:      rgba(66, 10, 21, 0.14);   /* maroon-tinted divider on white */
+  --rule-soft: rgba(66, 10, 21, 0.06);
+  --rule-on-maroon: rgba(255, 235, 220, 0.18);
+
+  /* === Type stack — Noto Sans + Noto Sans TC (feedback pt 10) ===
+     The 2026-05-13 review (pt 10) named Google's Noto Sans TC and Noto Sans
+     as acceptable alternatives to v3_2's Open Sans / Nunito stack — this
+     version adopts them. Noto Sans carries the Latin text and numerals;
+     Noto Sans TC carries the Hant CJK. System CJK faces (PingFang TC,
+     Microsoft JhengHei) stay as the offline fallback.
+     Noto Sans TC ships no italic master, so --ff-accent-italic leans on
+     Noto Sans italic for Latin and falls through to a serif for any CJK. */
+  --ff-body:    "Noto Sans", "Noto Sans TC", "PingFang TC",
+                "Microsoft JhengHei", "Heiti TC", system-ui,
+                -apple-system, sans-serif;
+  --ff-display: "Noto Sans", "Noto Sans TC", "PingFang TC",
+                "Microsoft JhengHei", "Heiti TC", system-ui,
+                -apple-system, sans-serif;
+  --ff-accent-italic: "Noto Sans", "Noto Sans TC", "PingFang TC",
+                "Microsoft JhengHei", Georgia, serif;
+  --ff-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+  /* Legacy variable names referenced by older selectors — kept so
+     unchanged blocks resolve to the new stack. */
+  --ff-display-cjk:   var(--ff-display);
+  --ff-display-latin: var(--ff-display);
+  --ff-cjk:           var(--ff-body);
+  --phoenix:          var(--ncku-red);
+  --phoenix-glow:     var(--ncku-red);
+
+  /* === Aliases — let the grafted v1-hero and v4-schedule/FAQ blocks
+     resolve against this aggregate's token set without renaming === */
+  --ncku-white:      #ffffff;
+  --ncku-near-black: #2a2a2c;
+  --ncku-silver-04:  rgba(166, 169, 171, 0.08);
+  --sans:            var(--ff-display);
+  --serif:           var(--ff-accent-italic);
+  --font-sans:       var(--ff-body);
+  --font-serif:      var(--ff-accent-italic);
+  --ink:             var(--bone);
+  --ink-soft:        #34302f;
+  --ink-mute:        #8b8b8e;
+  --band-grey:       #f4f4f4;
+  --band-edge:       #e8e8e8;
+  --ncku-grey:       var(--bone-mid);
+  --ncku-grey-mid:   var(--bone-dim);
+  --ncku-grey-soft:  #b8b8bc;
+  --ncku-rule:       rgba(66, 10, 21, 0.18);
+  --line:            var(--rule);
+  --line-strong:     rgba(85, 85, 89, 0.26);
+  --surface-tint:    #f7f7f7;
+  --r-sm:            4px;
+
+  --rail-w: 96px;
+  --gutter: clamp(1.25rem, 4vw, 4rem);
+  /* right-edge lane reserved for the fixed scene rail so it never sits
+     over content (feedback pt 5). Collapses to --gutter once the rail is
+     hidden on narrower viewports. */
+  --rail-lane: 168px;
+  --scene-pad: clamp(5rem, 10vw, 9rem);
+
+  --utility-h: 32px;
+  --topbar-h:  76px;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---------- reset ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  /* Every in-page jump (hero CTA, topnav, FAB, scene rail) must clear the
+     fixed gold-strip + red-topbar stack, or the target lands hidden. */
+  scroll-padding-top: calc(var(--utility-h) + var(--topbar-h) + 14px);
+}
+body {
+  min-height: 100vh;
+  font-family: var(--ff-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--bone-mid);
+  background: var(--paper);
+  overflow-x: hidden;
+  /* Push content below the fixed header stack */
+  padding-top: calc(var(--utility-h) + var(--topbar-h));
+}
+img { max-width: 100%; display: block; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+::selection { background: var(--ncku-red); color: #ffffff; }
+
+/* ---------- global atmosphere — paper-warm white with red breath ---------- */
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse 70% 40% at 95% 5%, rgba(163, 31, 52, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 0% 30%, rgba(140, 110, 74, 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 60% at 100% 95%, rgba(66, 10, 21, 0.06) 0%, transparent 55%),
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-warm) 70%, var(--ink-2) 100%);
+}
+.atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.30;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.43  0 0 0 0 0.35  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: multiply;
+}
+
+/* =================================================================
+   UTILITY STRIP (above topbar) — gold/tan like web.ncku.edu.tw
+   ================================================================= */
+.utility-strip {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 51;
+  height: var(--utility-h);
+  background: linear-gradient(180deg, var(--ncku-gold-2) 0%, var(--ncku-gold) 100%);
+  color: rgba(255, 248, 235, 0.92);
+  display: flex;
+  align-items: center;
+}
+.utility-strip__inner {
+  width: 100%;
+  padding: 0 var(--gutter);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-family: var(--ff-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.utility-strip__chip {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.utility-strip__chip:hover,
+.utility-strip__chip:focus-visible {
+  color: rgba(255, 248, 235, 0.78);
+  outline: none;
+}
+.utility-strip__divider {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.45);
+}
+.utility-strip__line {
+  color: rgba(255, 248, 235, 0.85);
+}
+
+/* visitor / pageview count (feedback pt 6) — lives in the gold utility
+   strip, pinned to the far-right edge so it reads as ambient micro-info,
+   not a bolted-on widget. Inherits the strip's mono / uppercase / tracked
+   treatment; only the number is lifted to full-white for a touch of weight. */
+.utility-strip__count {
+  margin-left: auto;            /* take over the right-edge slot */
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5em;
+  color: rgba(255, 248, 235, 0.85);
+}
+.utility-strip__count-num {
+  color: #fff;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;       /* digits need less tracking than the caps */
+}
+@media (max-width: 960px) {
+  /* the strip hides its free-text lines on narrow viewports; keep the
+     count visible but drop its now-redundant auto margin so it sits
+     inline with the chip. */
+  .utility-strip__count { margin-left: 0; }
+}
+
+/* =================================================================
+   TOPBAR — solid NCKU Red (matches live web.ncku.edu.tw)
+   ================================================================= */
+.topbar {
+  position: fixed;
+  top: var(--utility-h); left: 0; right: 0;
+  z-index: 50;
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--gutter);
+  background: linear-gradient(180deg, var(--ncku-red) 0%, var(--ncku-red-deep) 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.10);
+  box-shadow: 0 6px 18px -10px rgba(66, 10, 21, 0.45);
+  transition: box-shadow .35s var(--ease);
+}
+.topbar.is-scrolled {
+  box-shadow: 0 10px 28px -14px rgba(66, 10, 21, 0.6);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: #ffffff;
+}
+/* site-logo.png is a full lockup (mark + 新生支持辦公室 + English line)
+   that turns into an illegible smudge at topbar size, so the icon mark is
+   cropped out of it (assets/img/site-logo-mark.png) and the wordmark is
+   typeset cleanly in .brand-text. The mark is dark-red on transparent, so
+   it sits on a white rounded tile to read against the red topbar. */
+.brand__mark {
+  display: inline-grid;
+  place-items: center;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 4px 12px -4px rgba(66, 10, 21, 0.4),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+/* sized to sit inside the round tile without the icon corners touching */
+.brand__mark img { width: 32px; height: 32px; }
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.brand-text b {
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+}
+.brand-text span {
+  font-family: var(--ff-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(255, 235, 220, 0.78);
+  margin-top: 3px;
+}
+.topnav {
+  display: flex;
+  gap: 0.15rem;
+  align-items: center;
+}
+.topnav a {
+  padding: 0.55rem 0.9rem;
+  font-family: var(--ff-display);
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: rgba(255, 235, 220, 0.86);
+  border-radius: 4px;
+  transition: color .22s var(--ease), background .22s var(--ease);
+  position: relative;
+}
+.topnav a::after {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: 6px;
+  width: 0; height: 1.5px;
+  background: var(--ncku-gold-2);
+  transform: translateX(-50%);
+  transition: width .25s var(--ease);
+}
+.topnav a:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.topnav a:hover::after { width: 60%; }
+
+.menu-toggle {
+  display: none;
+  width: 40px; height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  align-items: center; justify-content: center;
+}
+.menu-toggle span {
+  display: block;
+  width: 18px; height: 1.5px;
+  background: #ffffff;
+  position: relative;
+}
+.menu-toggle span::before,
+.menu-toggle span::after {
+  content: ""; position: absolute; left: 0; right: 0; height: 1.5px; background: #ffffff;
+}
+.menu-toggle span::before { top: -6px; }
+.menu-toggle span::after { top: 6px; }
+
+/* ---------- scene rail (right edge) ---------- */
+.rail {
+  position: fixed;
+  top: 50%; right: 1.25rem;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex; flex-direction: column;
+  gap: 0.95rem;
+}
+.rail button {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0;
+  font-family: var(--ff-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  color: var(--bone-mute);
+  transition: color .3s var(--ease);
+}
+.rail .dash {
+  width: 18px; height: 1px;
+  background: currentColor;
+  transition: width .35s var(--ease), background .35s var(--ease), box-shadow .35s var(--ease);
+}
+/* the description stays hidden until its item is active or hovered —
+   but when it IS shown it needs to actually read, so it's set in the
+   body face, larger and heavier than the mono index number (feedback) */
+.rail .label {
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity .3s var(--ease), transform .3s var(--ease);
+  white-space: nowrap;
+  font-family: var(--ff-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.rail button:hover { color: var(--ncku-maroon); }
+.rail button:hover .label { opacity: 1; transform: translateX(0); }
+.rail button.is-active { color: var(--ncku-red); }
+.rail button.is-active .dash {
+  width: 36px;
+  background: var(--ncku-red);
+  box-shadow: 0 0 6px rgba(163, 31, 52, 0.45);
+}
+.rail button.is-active .label { opacity: 1; transform: translateX(0); }
+
+/* When the rail's fixed centre sits over the maroon President panel,
+   flip it to a light, high-contrast scheme so numbers + labels stay
+   legible. Toggled by JS (.rail--on-dark) — see script.js activeScene. */
+.rail--on-dark button { color: rgba(255, 235, 220, 0.62); }
+.rail--on-dark button:hover { color: #ffffff; }
+.rail--on-dark button.is-active { color: var(--ncku-gold-2); }
+.rail--on-dark button.is-active .dash {
+  background: var(--ncku-gold-2);
+  box-shadow: 0 0 6px rgba(180, 143, 94, 0.55);
+}
+
+/* ---------- floating action button ---------- */
+.fab {
+  position: fixed;
+  bottom: 1.4rem; right: 1.4rem;
+  z-index: 45;
+}
+.fab__toggle {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--ncku-red-soft), var(--ncku-red) 70%);
+  box-shadow:
+    0 14px 28px -10px rgba(163, 31, 52, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  display: grid; place-items: center;
+  color: #ffffff;
+  transition: transform .3s var(--ease), box-shadow .3s var(--ease);
+}
+.fab__toggle:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow:
+    0 18px 36px -10px rgba(163, 31, 52, 0.6),
+    0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.fab__toggle svg { width: 22px; height: 22px; }
+.fab__panel {
+  position: absolute;
+  right: 0; bottom: 76px;
+  width: 240px;
+  padding: 0.75rem;
+  background: #ffffff;
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--ncku-red);
+  border-radius: 8px;
+  box-shadow: 0 18px 40px -12px rgba(66, 10, 21, 0.25);
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  pointer-events: none;
+  transform-origin: bottom right;
+  transition: opacity .25s var(--ease), transform .25s var(--ease);
+}
+.fab.is-open .fab__panel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.fab__panel a {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.88rem;
+  border-radius: 4px;
+  color: var(--bone-mid);
+  transition: background .2s var(--ease), color .2s var(--ease);
+}
+.fab__panel a:hover { background: rgba(163, 31, 52, 0.08); color: var(--ncku-maroon); }
+.fab__panel a::before {
+  content: "→";
+  font-family: var(--ff-mono);
+  color: var(--ncku-red);
+  font-size: 0.85em;
+}
+
+/* =================================================================
+   SCENE container
+   ================================================================= */
+.scene {
+  position: relative;
+  /* right padding = rail lane so section content never sits under the
+     fixed scene rail (feedback pt 5) */
+  padding: var(--scene-pad) var(--rail-lane) var(--scene-pad) var(--gutter);
+  max-width: 100%;
+}
+.scene__head {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) 1fr;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  align-items: start;
+  margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+/* Scene number — red knockout ribbon chip ----------------------- */
+.scene__num {
+  display: inline-flex;
+  align-items: stretch;
+  align-self: start;
+  margin-top: 0.45rem;
+  font-family: var(--ff-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  line-height: 1;
+  isolation: isolate;
+}
+.scene__num span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  padding: 0.55rem 0.7rem;
+  background: var(--ncku-red);
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-size: 0.92rem;
+  position: relative;
+}
+.scene__num span::after {
+  /* tiny ribbon notch */
+  content: "";
+  position: absolute;
+  right: -8px; top: 0; bottom: 0;
+  width: 8px;
+  background: var(--ncku-red);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+.scene__num em {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.85rem 0 1.1rem;
+  margin-left: 0;
+  background: var(--ncku-maroon);
+  color: rgba(255, 235, 220, 0.92);
+  font-family: var(--ff-mono);
+  font-style: normal;
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.scene__title {
+  font-family: var(--ff-display);
+  font-weight: 600;
+  font-size: clamp(2.1rem, 5.4vw, 3.6rem);
+  line-height: 1.08;
+  letter-spacing: 0.04em;
+  margin: 0;
+  color: var(--ncku-maroon);
+  position: relative;
+  padding-bottom: 0.6rem;
+}
+.scene__title::after {
+  content: "";
+  display: block;
+  margin-top: 0.85rem;
+  width: 64px; height: 3px;
+  background: linear-gradient(90deg, var(--ncku-red) 0%, var(--ncku-red-soft) 100%);
+}
+.scene__title em {
+  font-family: var(--ff-accent-italic);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--bone-mid);
+  font-size: 0.42em;
+  letter-spacing: 0.04em;
+  display: block;
+  margin-top: 0.5rem;
+}
+.scene__lede {
+  font-family: var(--ff-body);
+  font-size: 1rem;
+  color: var(--bone-mid);
+  max-width: 56ch;
+  margin: 1.1rem 0 0;
+  line-height: 1.75;
+}
+
+/* ---------- reveal motion ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .9s var(--ease), transform .9s var(--ease);
+}
+.reveal.is-in { opacity: 1; transform: none; }
+.reveal[data-stagger="1"] { transition-delay: .08s; }
+.reveal[data-stagger="2"] { transition-delay: .16s; }
+.reveal[data-stagger="3"] { transition-delay: .24s; }
+.reveal[data-stagger="4"] { transition-delay: .32s; }
+.reveal[data-stagger="5"] { transition-delay: .40s; }
+.reveal[data-stagger="6"] { transition-delay: .48s; }
+.reveal[data-stagger="7"] { transition-delay: .56s; }
+.reveal[data-stagger="8"] { transition-delay: .64s; }
+
+/* =================================================================
+   centered content rail (used by the v1 hero)
+   ================================================================= */
+.container {
+  width: min(1200px, 100% - 3rem);
+  margin-inline: auto;
+}
+
+/* =================================================================
+   buttons (grafted from v1 — used by the hero CTAs)
+   ================================================================= */
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 26px;
+  border-radius: var(--r-sm);
+  font-family: var(--sans);
+  font-size: .94rem;
+  font-weight: 500;
+  letter-spacing: .04em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .25s ease, color .25s ease, border-color .25s ease, transform .25s cubic-bezier(.2,.8,.2,1);
+  white-space: nowrap;
+}
+.btn svg { width: 18px; height: 18px; transition: transform .25s ease; }
+.btn:hover svg { transform: translateX(3px); }
+.btn-primary { background: var(--ncku-red); color: var(--ncku-white); }
+.btn-primary:hover { background: var(--ncku-red-deep); transform: translateY(-1px); }
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.btn-ghost:hover {
+  color: var(--ncku-red);
+  border-color: var(--ncku-red);
+  background: var(--ncku-silver-04);
+}
+
+/* =================================================================
+   00 — HERO (v1 banner-carousel — feedback pt 1 & pt 2)
+   pt 2: the dark mask is an *entrance* layer only. On load it covers
+   the photo with the title large + lifted toward centre; ~2.8s later
+   it fades out while the content zooms down to the bottom-left corner
+   (driven by .is-settled, added in JS). After that the photo reads
+   bright like v0 — a small bottom-left scrim keeps the resting copy
+   legible without masking the image.
+   ================================================================= */
+.hero {
+  position: relative;
+  min-height: clamp(560px, 86vh, 820px);
+  display: flex;
+  align-items: flex-end;            /* settled copy rests at the bottom… */
+  justify-content: flex-end;        /* …right corner (feedback pt 2) */
+  /* bottom padding lifts the resting copy clear of the fixed FAB; living
+     on the hero (not .hero-content) keeps the content box clean to measure.
+     Right padding is the rail lane so the settled copy clears the rail. */
+  padding: 0 var(--rail-lane) clamp(72px, 12vh, 128px) var(--gutter);
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--ncku-near-black);
+  color: var(--ncku-white);
+}
+/* permanent corner scrim — bottom-right only, fading out toward the
+   top-left, so the photo stays bright but the resting copy keeps
+   its contrast (feedback: "don't block the photo too much"). */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to top left,
+    rgba(14, 12, 15, 0.86) 0%,
+    rgba(14, 12, 15, 0.55) 24%,
+    rgba(14, 12, 15, 0.16) 46%,
+    transparent 66%);
+}
+.hero-media { position: absolute; inset: 0; z-index: -2; }
+.hero-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center 55%;
+  opacity: 0;
+  transform: scale(1.04);
+  /* shorter crossfade keeps the two banners' baked text from
+     lingering co-visible during a slide change */
+  transition: opacity 0.8s ease, transform 12s ease-out;
+  /* pt 2 — bright like v0, which ran these banners with no darkening.
+     Brightness lifted again per follow-up feedback ("still slightly dark"). */
+  filter: brightness(1.16) saturate(1.06);
+}
+.hero-img.is-active { opacity: 1; transform: scale(1.0); }
+/* the entrance mask — a strong, near-even dark cover on load that
+   fades right out once the hero settles */
+.hero-veil {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg,
+    rgba(16, 14, 17, 0.93) 0%,
+    rgba(16, 14, 17, 0.90) 55%,
+    rgba(28, 12, 18, 0.93) 100%);
+  transition: opacity 1.15s var(--ease);
+}
+.hero.is-settled .hero-veil { opacity: 0; }
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  max-width: 460px;
+  transform-origin: center center;
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.55);
+  /* state A — centred under the mask. This calc is the pre-JS / no-JS
+     approximation; heroIntro() measures the resting box and pins it to
+     the exact hero centre on load. */
+  transform: translate(calc(-50vw + var(--rail-lane) + 50%),
+                       calc(-43vh + 50% + clamp(72px, 12vh, 128px))) scale(1.3);
+  transition: transform 1.2s var(--ease);
+}
+/* state B — zoomed down to its resting compact bottom-right position */
+.hero.is-settled .hero-content { transform: none; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 14px;
+  font-size: .76rem; font-weight: 500;
+  letter-spacing: .26em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .82);
+  margin-bottom: 1.5rem;
+}
+.hero-rule {
+  display: inline-block;
+  width: 56px; height: 1px;
+  background: var(--ncku-gold);
+}
+.hero-title {
+  font-family: var(--sans);
+  font-weight: 300;
+  /* compact resting size — this block lives in the corner now */
+  font-size: clamp(1.95rem, 3.4vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -.012em;
+  margin: 0 0 1rem;
+  color: var(--ncku-white);
+}
+.hero-title-line { display: block; }
+.hero-title em {
+  font-weight: 400;
+  font-style: normal;
+  color: var(--ncku-white);
+  position: relative;
+  padding: 0 .12em;
+}
+.hero-title em::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -.04em;
+  height: 6px;
+  background: var(--ncku-red);
+  z-index: -1;
+}
+.hero-lede {
+  font-size: clamp(0.95rem, 1vw, 1.05rem);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, .9);
+  max-width: 100%;
+  margin: 0 0 1.5rem;
+  font-weight: 300;
+}
+.hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+.hero .btn-primary { background: var(--ncku-red); }
+.hero .btn-primary:hover { background: var(--ncku-white); color: var(--ncku-red); }
+.hero .btn-ghost { color: var(--ncku-white); border-color: rgba(255,255,255,.42); }
+.hero .btn-ghost:hover { background: rgba(255,255,255,.08); border-color: var(--ncku-white); color: var(--ncku-white); }
+
+.hero-meta {
+  margin-top: 3.5rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid rgba(255,255,255,.18);
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  gap: 56px;
+  max-width: 560px;
+}
+.hero-stat { display: flex; flex-direction: column; gap: 4px; }
+.hero-stat b {
+  font-family: var(--sans);
+  font-weight: 300;
+  font-size: 2rem;
+  color: var(--ncku-white);
+  line-height: 1;
+  letter-spacing: -.01em;
+}
+.hero-stat span {
+  font-size: .74rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.6);
+}
+.hero-pager {
+  position: absolute;
+  /* bottom-left now the settled copy occupies the bottom-right corner */
+  bottom: 32px; left: var(--gutter);
+  display: flex; gap: 10px;
+  z-index: 4;
+}
+.hero-dot {
+  width: 8px; height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.32);
+  border: 0; padding: 0;
+  transition: width .3s ease, background .3s ease;
+}
+.hero-dot.is-active { width: 32px; background: var(--ncku-gold); border-radius: 4px; }
+@media (max-width: 760px) {
+  .hero-pager { bottom: 18px; }
+}
+
+/* =================================================================
+   BAND — red horizontal divider between hero and 學業
+   ================================================================= */
+.band {
+  position: relative;
+  /* keep the band's inner content clear of the rail lane */
+  padding: 1.6rem var(--rail-lane) 1.6rem var(--gutter);
+  overflow: hidden;
+}
+.band--red {
+  background: linear-gradient(90deg, var(--ncku-maroon) 0%, var(--ncku-red) 55%, var(--ncku-red-deep) 100%);
+  color: #ffffff;
+  border-top: 3px solid var(--ncku-gold);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 -8px 20px -10px rgba(0, 0, 0, 0.35);
+}
+.band__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+}
+.band__seal {
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.5em;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+}
+.band__line {
+  font-family: var(--ff-display);
+  font-size: 0.96rem;
+  letter-spacing: 0.16em;
+  color: rgba(255, 240, 230, 0.92);
+}
+.band__mark {
+  margin-left: auto;
+  font-family: var(--ff-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  color: rgba(255, 235, 220, 0.78);
+}
+
+/* =================================================================
+   04 — PRESIDENT (deep maroon panel — biggest red surface in v3_2)
+   ================================================================= */
+.scene--maroon {
+  background:
+    linear-gradient(180deg, var(--ncku-maroon-2) 0%, var(--ncku-maroon) 35%, var(--ncku-maroon-2) 100%);
+  color: var(--paper-soft-on-maroon);
+  margin: 4rem 0;
+  border-top: 4px solid var(--ncku-red);
+  border-bottom: 4px solid var(--ncku-red);
+  position: relative;
+  overflow: hidden;
+}
+.scene--maroon__veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(163, 31, 52, 0.35) 0%, transparent 45%),
+    radial-gradient(circle at 92% 88%, rgba(163, 31, 52, 0.22) 0%, transparent 50%);
+}
+.scene--maroon::before {
+  /* Subtle seal in the corner */
+  content: "成 大";
+  position: absolute;
+  top: 1.2rem; right: clamp(1rem, 3vw, 2.5rem);
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5vw, 4rem);
+  letter-spacing: 0.5em;
+  color: rgba(255, 235, 220, 0.06);
+  pointer-events: none;
+}
+.scene--maroon .scene__head { border-bottom-color: var(--rule-on-maroon); }
+.scene--maroon .scene__title { color: #ffffff; }
+.scene--maroon .scene__title em { color: rgba(255, 235, 220, 0.6); }
+.scene--maroon .scene__title::after {
+  background: linear-gradient(90deg, var(--ncku-gold-2) 0%, var(--ncku-red-soft) 100%);
+}
+.scene--maroon .scene__lede { color: var(--paper-soft-on-maroon); }
+.scene--maroon .scene__num span { background: var(--ncku-red); }
+.scene--maroon .scene__num span::after { background: var(--ncku-red); }
+.scene--maroon .scene__num em {
+  background: rgba(255, 235, 220, 0.10);
+  color: rgba(255, 235, 220, 0.86);
+}
+
+.president {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+  position: relative;
+  z-index: 1;
+}
+.president__portrait {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  display: grid;
+  place-items: end center;
+  isolation: isolate;
+}
+.president__portrait::before {
+  content: "";
+  position: absolute;
+  width: 92%;
+  aspect-ratio: 1 / 1;
+  top: 4%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 235, 220, 0.10) 0%, rgba(163, 31, 52, 0.18) 45%, transparent 78%);
+  filter: blur(28px);
+  z-index: -2;
+  animation: bloom 7s ease-in-out infinite;
+}
+@keyframes bloom {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; }
+  50% { transform: translateX(-50%) scale(1.04); opacity: 1; }
+}
+.president__portrait::after {
+  content: "";
+  position: absolute;
+  width: 78%;
+  aspect-ratio: 1 / 1;
+  top: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 235, 220, 0.22);
+  z-index: -1;
+  pointer-events: none;
+}
+.president__portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: saturate(0.95) contrast(1.0) brightness(1.0) drop-shadow(0 18px 24px rgba(0, 0, 0, 0.45));
+}
+.president__caption {
+  margin-top: 1.5rem;
+  font-family: var(--ff-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 235, 220, 0.6);
+  text-align: center;
+}
+.president__caption b {
+  display: block;
+  font-family: var(--ff-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.18em;
+  text-transform: none;
+  color: #ffffff;
+  margin-bottom: 0.3rem;
+}
+
+.president__quote {
+  font-family: var(--ff-accent-italic);
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(1.5rem, 2.5vw, 2.1rem);
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  position: relative;
+  padding-left: 2rem;
+  border-left: 2px solid var(--ncku-red-soft);
+  margin: 0 0 2rem;
+}
+.president__quote::before {
+  content: "「";
+  position: absolute;
+  left: -0.3rem; top: -1.5rem;
+  font-size: 4rem;
+  color: var(--ncku-gold-2);
+  opacity: 0.7;
+  font-family: var(--ff-accent-italic);
+  line-height: 1;
+}
+.president__excerpt p {
+  font-size: 1rem;
+  line-height: 1.85;
+  color: var(--paper-soft-on-maroon);
+  margin: 0 0 1.1rem;
+}
+.president__full {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .8s var(--ease), opacity .5s var(--ease);
+  opacity: 0;
+  position: relative;
+}
+.president__full.is-open { max-height: 4000px; opacity: 1; }
+.president__full p {
+  font-size: 1rem;
+  line-height: 1.95;
+  color: var(--paper-soft-on-maroon);
+  margin: 0 0 1.3rem;
+}
+.president__full p:first-child::first-letter {
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: 3.6em;
+  float: left;
+  line-height: 0.85;
+  margin: 0.1em 0.18em 0 0;
+  color: var(--ncku-gold-2);
+}
+.president__expand {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1.3rem;
+  font-family: var(--ff-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 235, 220, 0.3);
+  transition: border-color .25s var(--ease), color .25s var(--ease), background .25s var(--ease);
+}
+.president__expand:hover {
+  border-color: var(--ncku-gold-2);
+  background: rgba(255, 255, 255, 0.12);
+}
+.president__expand .arrow { transition: transform .35s var(--ease); }
+.president__expand.is-open .arrow { transform: rotate(180deg); }
+
+/* =================================================================
+   05 — SCHEDULE (grafted from v4 — stat strip + editorial table,
+   feedback pt 7). Sits inside the v3_2 .scene shell, so the section
+   header keeps the red ribbon number from the rest of the page.
+   ================================================================= */
+.stat-strip {
+  /* sits directly under the .scene__head, which already supplies the
+     section's top breathing room — no extra margin needed here */
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ncku-rule);
+  background: #fff;
+}
+.stat {
+  padding: 36px 18px 32px;
+  border-right: 1px solid var(--ncku-rule);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.stat:last-child { border-right: 0; }
+.stat b {
+  display: block;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: clamp(2.2rem, 4.2vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -.025em;
+  color: var(--ncku-red);
+  font-variant-numeric: tabular-nums;
+}
+.stat span {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ncku-grey);
+}
+
+.schedule-controls {
+  margin-top: 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+.who-tabs {
+  display: inline-flex;
+  border: 1px solid var(--ink);
+}
+.who-tab {
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--ink);
+  background: #fff;
+  border-right: 1px solid var(--ink);
+  transition: color .2s, background .2s;
+}
+.who-tab:last-child { border-right: 0; }
+.who-tab:hover { color: var(--ncku-red); }
+.who-tab.active { background: var(--ink); color: #fff; }
+.schedule-hint {
+  font-size: 13px;
+  color: var(--ncku-grey-mid);
+  letter-spacing: .04em;
+  font-style: italic;
+}
+
+.schedule-table-wrap {
+  margin-top: 24px;
+  overflow-x: auto;
+}
+.schedule-table {
+  width: 100%;
+  font-size: 14.5px;
+  text-align: left;
+  background: transparent;
+  border-collapse: collapse;
+}
+.schedule-table thead th {
+  padding: 18px 16px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--ncku-grey);
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ncku-rule);
+  vertical-align: bottom;
+}
+.schedule-table tbody td {
+  padding: 24px 16px;
+  border-bottom: 1px solid var(--ncku-rule);
+  vertical-align: top;
+  color: var(--ink);
+  line-height: 1.6;
+}
+.schedule-table tbody tr { transition: background-color .15s; }
+.schedule-table tbody tr:hover { background: rgba(163, 31, 52, .04); }
+
+.t-num     { width: 64px; }
+.t-item    { width: 17%; }
+.t-time    { width: 14%; }
+.t-content { width: auto; }
+.t-dept    { width: 22%; }
+
+.cell-num {
+  /* v4 set the # markers in Noto Serif TC as little editorial numerals.
+     v-May15 has no serif face — but its accent token (--font-serif →
+     --ff-accent-italic) is used italic everywhere else in the aggregate
+     (.scene__title em, .president__quote, .thread__list .is-accent).
+     Matching that convention here keeps the row numbers reading as an
+     intentional editorial marker rather than plain body text. */
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ncku-red);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.cell-item {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: .01em;
+}
+.cell-item a {
+  display: inline;
+  background-image: linear-gradient(var(--ncku-red), var(--ncku-red));
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 2px;
+  transition: color .2s;
+}
+.cell-item a:hover { color: var(--ncku-red); }
+.cell-time {
+  color: var(--ncku-grey);
+  font-variant-numeric: tabular-nums;
+}
+.cell-content { color: var(--ink-soft); font-size: 14px; }
+.cell-content p { margin: 0 0 6px; }
+.cell-content p:last-child { margin: 0; }
+.who-pills { margin-top: 4px; }
+.cell-content .who-pill {
+  display: inline-block;
+  margin-top: 8px;
+  margin-right: 4px;
+  padding: 3px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--ncku-red);
+  border: 1px solid var(--ncku-red);
+}
+.cell-dept {
+  color: var(--ncku-grey);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+@media (max-width: 720px) {
+  .stat-strip { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(2) { border-right: 0; }
+  .stat:nth-child(-n+2) { border-bottom: 1px solid var(--ncku-rule); }
+  .stat { padding: 24px 16px; }
+}
+@media (max-width: 900px) {
+  .schedule-table thead { display: none; }
+  .schedule-table, .schedule-table tbody, .schedule-table tr, .schedule-table td {
+    display: block; width: auto !important;
+  }
+  .schedule-table tr {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--ncku-rule);
+    position: relative;
+  }
+  .schedule-table tr:hover { background: transparent; }
+  .schedule-table td {
+    padding: 4px 0 4px 92px;
+    border: 0;
+    position: relative;
+  }
+  .schedule-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    top: 6px; left: 0;
+    width: 80px;
+    font-size: 10.5px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--ncku-grey-mid);
+    font-weight: 700;
+  }
+  .schedule-table td.cell-num {
+    padding-left: 0;
+    margin-bottom: 6px;
+  }
+  .schedule-table td.cell-num::before { display: none; }
+}
+
+/* =================================================================
+   THREADS (學業 / 生活 / 培力)
+   ================================================================= */
+.threads {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+.thread {
+  display: flex; flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.85rem 1.75rem 1.75rem;
+  border: 1px solid var(--rule);
+  border-top: 4px solid var(--ncku-red);
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .35s var(--ease), transform .35s var(--ease), box-shadow .35s var(--ease);
+}
+.thread:hover {
+  border-color: var(--rule);
+  border-top-color: var(--ncku-red);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 34px -22px rgba(66, 10, 21, 0.32);
+}
+.thread::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 100% 0%, rgba(163, 31, 52, 0.08) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity .4s var(--ease);
+  pointer-events: none;
+}
+.thread:hover::before { opacity: 1; }
+.thread__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.thread__head h3 {
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0;
+  letter-spacing: 0.08em;
+  color: var(--ncku-maroon);
+}
+.thread__head .ord {
+  font-family: var(--ff-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  color: var(--ncku-red);
+  font-weight: 600;
+}
+.thread__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.thread__list li {
+  padding: 0.55rem 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--bone-mid);
+  border-bottom: 1px dashed var(--rule-soft);
+  transition: color .2s var(--ease), padding .2s var(--ease);
+  position: relative;
+}
+.thread__list li:last-child { border-bottom: 0; }
+.thread__list li.is-link {
+  color: var(--bone);
+  cursor: pointer;
+}
+.thread__list li.is-link::before {
+  content: "→";
+  display: inline-block;
+  margin-right: 0.5rem;
+  font-family: var(--ff-mono);
+  color: var(--ncku-red);
+  transition: transform .25s var(--ease);
+}
+.thread__list li.is-link:hover { padding-left: 0.4rem; color: var(--ncku-maroon); }
+.thread__list li.is-link:hover::before { transform: translateX(4px); }
+.thread__list li.is-accent {
+  color: var(--ncku-gold);
+  font-family: var(--ff-accent-italic);
+  font-style: italic;
+  font-size: 1rem;
+}
+.thread__list li small {
+  display: block;
+  color: var(--bone-mute);
+  font-size: 0.82em;
+  margin-top: 0.15rem;
+}
+
+/* =================================================================
+   06 — FAQ (grafted from v4 — underline search + editorial accordion,
+   feedback pt 7). Lives inside the v3_2 .scene shell.
+   ================================================================= */
+.faq-controls {
+  /* .scene__head already supplies the section's top spacing */
+  margin-top: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 820px;
+}
+.search-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  border-bottom: 2px solid var(--ink);
+  transition: border-color .25s;
+}
+.search-wrap:focus-within { border-color: var(--ncku-red); }
+.search-wrap input {
+  flex: 1;
+  padding: 18px 0 14px;
+  font: inherit;
+  font-size: 19px;
+  background: transparent;
+  border: 0; outline: 0;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: .01em;
+}
+.search-wrap input::placeholder {
+  color: var(--ncku-grey-mid);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.search-btn {
+  width: 56px;
+  font-size: 22px;
+  color: var(--ncku-red);
+  transition: transform .25s;
+}
+.search-btn:hover { transform: translateX(6px); }
+
+.hot-row, .cat-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.row-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--ncku-grey);
+  min-width: 56px;
+}
+.hot-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hot-keywords button {
+  padding: 7px 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--ncku-rule);
+  transition: color .2s, border-color .2s, background .2s;
+}
+.hot-keywords button:hover {
+  color: #fff;
+  background: var(--ncku-red);
+  border-color: var(--ncku-red);
+}
+.cat-row select {
+  font: inherit;
+  font-size: 14px;
+  padding: 9px 36px 9px 14px;
+  background: #fff;
+  border: 1px solid var(--ncku-rule);
+  border-radius: 0;
+  color: var(--ink);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23A31F34'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 18px;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.cat-row select:hover { border-color: var(--ncku-red); }
+.result-count {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ncku-grey-mid);
+  font-variant-numeric: tabular-nums;
+}
+
+.faq-list {
+  margin-top: 3.5rem;
+  border-top: 1px solid var(--ink);
+  text-align: left;
+}
+.faq-item {
+  border-bottom: 1px solid var(--ncku-rule);
+  background: transparent;
+}
+.faq-bar {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 70px 160px 1fr 36px;
+  gap: 22px;
+  align-items: center;
+  padding: 26px 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s;
+}
+.faq-bar:hover { background: rgba(163, 31, 52, .04); }
+.faq-bar .qid {
+  /* same editorial-marker treatment as .cell-num — italic accent face,
+     consistent with the aggregate's use of --ff-accent-italic */
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ncku-grey);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.faq-bar .qcat {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ncku-red);
+  border-left: 2px solid var(--ncku-red);
+  padding-left: 12px;
+  line-height: 1.4;
+}
+.faq-bar .qtext {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.5;
+  letter-spacing: .005em;
+}
+.faq-bar .toggle {
+  font-size: 22px;
+  color: var(--ncku-red);
+  text-align: right;
+  font-weight: 300;
+  transition: transform .35s ease;
+}
+.faq-item.open .faq-bar .toggle { transform: rotate(45deg); }
+
+.faq-content {
+  display: none;
+  padding: 8px 36px 36px 252px;
+}
+.faq-item.open .faq-content { display: block; }
+.faq-content .answer {
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--ink-soft);
+}
+.faq-content .answer a {
+  color: var(--ncku-red);
+  border-bottom: 1px solid var(--ncku-red);
+}
+.faq-content .meta {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ncku-rule);
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ncku-grey-mid);
+  font-weight: 600;
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+.faq-content .meta b {
+  color: var(--ncku-grey);
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.faq-empty {
+  margin-top: 32px;
+  padding: 40px;
+  text-align: center;
+  color: var(--ncku-grey-mid);
+  font-size: 15px;
+  border: 1px solid var(--ncku-rule);
+  background: #fff;
+}
+
+@media (max-width: 720px) {
+  .faq-bar {
+    grid-template-columns: auto 1fr 30px;
+    grid-template-rows: auto auto;
+    gap: 8px 14px;
+    padding: 22px 4px;
+  }
+  .faq-bar .qid { grid-column: 1; grid-row: 1; font-size: 14px; }
+  .faq-bar .qcat { grid-column: 2; grid-row: 1; font-size: 10.5px; padding-left: 8px; }
+  .faq-bar .qtext { grid-column: 1 / -1; grid-row: 2; font-size: 16px; }
+  .faq-bar .toggle { grid-column: 3; grid-row: 1 / span 2; }
+  .faq-content { padding: 0 0 28px; }
+}
+
+/* =================================================================
+   FOOTER — deep maroon panel
+   ================================================================= */
+.footer {
+  margin-top: 4rem;
+  padding: 4.5rem var(--rail-lane) 3rem var(--gutter);
+  background:
+    linear-gradient(180deg, var(--ncku-maroon) 0%, var(--ncku-maroon-2) 100%);
+  color: rgba(255, 235, 220, 0.85);
+  position: relative;
+}
+.footer__rule {
+  /* layered: gold thin strip + red thicker strip on top */
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background:
+    linear-gradient(180deg, var(--ncku-gold) 0%, var(--ncku-gold) 50%, var(--ncku-red) 50%, var(--ncku-red) 100%);
+}
+.footer__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  align-items: end;
+}
+.footer__col-1 { display: flex; flex-direction: column; gap: 1.5rem; }
+.footer__brand {
+  display: flex; align-items: center; gap: 0.8rem;
+  font-family: var(--ff-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #ffffff;
+  letter-spacing: 0.06em;
+}
+/* site-logo-mark.png is dark-red on transparent — on the maroon footer it
+   gets the same white round tile as the topbar mark so it stays legible. */
+.footer__brand img {
+  width: 40px; height: 40px;
+  padding: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+.footer__brand span {
+  font-family: var(--ff-mono);
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 235, 220, 0.55);
+  margin-left: 0.3rem;
+}
+.footer__addr {
+  font-size: 0.9rem;
+  color: rgba(255, 235, 220, 0.75);
+  line-height: 1.85;
+}
+.footer__links {
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem;
+  list-style: none; margin: 0; padding: 0;
+}
+.footer__links a {
+  font-family: var(--ff-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 235, 220, 0.7);
+  transition: color .25s var(--ease);
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+}
+.footer__links a:hover {
+  color: #ffffff;
+  border-bottom-color: var(--ncku-gold-2);
+}
+.footer__copy {
+  font-family: var(--ff-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: rgba(255, 235, 220, 0.5);
+  text-align: right;
+}
+
+/* =================================================================
+   RESPONSIVE
+   ================================================================= */
+/* Below this width the fixed scene rail is hidden — reclaim its lane
+   so section content uses the full width again. */
+@media (max-width: 1024px) {
+  :root { --rail-lane: var(--gutter); }
+  .rail { display: none; }
+}
+
+@media (max-width: 960px) {
+  .scene__head { grid-template-columns: 1fr; gap: 0.8rem; }
+  .threads { grid-template-columns: 1fr; }
+  .president { grid-template-columns: 1fr; }
+  .president__portrait { max-width: 220px; margin: 0 auto; }
+  .footer__inner { grid-template-columns: 1fr; }
+  .footer__copy { text-align: left; }
+  .utility-strip__inner { gap: 0.6rem; }
+  /* the free-text lines drop out on narrow viewports — hide their
+     dividers too, or the strip shows orphaned "| | |" pipes. */
+  .utility-strip__line { display: none; }
+  .utility-strip__divider { display: none; }
+}
+
+@media (max-width: 720px) {
+  :root { --topbar-h: 64px; }
+  .topnav {
+    position: fixed;
+    top: calc(var(--utility-h) + var(--topbar-h)); right: var(--gutter);
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.4rem;
+    padding: 1rem 1.2rem;
+    background: var(--ncku-red-deep);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity .25s var(--ease), transform .25s var(--ease);
+    box-shadow: 0 18px 30px -12px rgba(66, 10, 21, 0.5);
+  }
+  .topnav.is-open {
+    opacity: 1; transform: none; pointer-events: auto;
+  }
+  .menu-toggle { display: flex; }
+  .schedule-controls { gap: 16px; }
+  .band__inner { flex-wrap: wrap; }
+  .band__mark { margin-left: 0; }
+  .brand-text span { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
