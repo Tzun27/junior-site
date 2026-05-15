@@ -47,27 +47,6 @@ const NAV = [
   }
 })();
 
-/* ---------- hero banner slideshow (grafted from v1) ---------- */
-(function heroSlideshow() {
-  const imgs = document.querySelectorAll(".hero-img");
-  const dots = document.querySelectorAll(".hero-dot");
-  if (!imgs.length) return;
-  let i = 0;
-  const total = imgs.length;
-  const go = n => {
-    i = (n + total) % total;
-    imgs.forEach((el, idx) => el.classList.toggle("is-active", idx === i));
-    dots.forEach((el, idx) => el.classList.toggle("is-active", idx === i));
-  };
-  dots.forEach((d, idx) => d.addEventListener("click", () => go(idx)));
-  let timer = setInterval(() => go(i + 1), 7500);
-  // pause rotation while the tab is hidden
-  document.addEventListener("visibilitychange", () => {
-    clearInterval(timer);
-    if (!document.hidden) timer = setInterval(() => go(i + 1), 7500);
-  });
-})();
-
 /* ---------- hero entrance — mask-then-zoom (feedback pt 2) ----------
    On load the hero shows the dark mask with the title large + lifted.
    After a short hold we add .is-settled: the mask fades out and the

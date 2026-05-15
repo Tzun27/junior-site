@@ -666,16 +666,8 @@ a { color: inherit; text-decoration: none; }
   width: 100%; height: 100%;
   object-fit: cover;
   object-position: center 55%;
-  opacity: 0;
-  transform: scale(1.04);
-  /* shorter crossfade keeps the two banners' baked text from
-     lingering co-visible during a slide change */
-  transition: opacity 0.8s ease, transform 12s ease-out;
-  /* pt 2 — bright like v0, which ran these banners with no darkening.
-     Brightness lifted again per follow-up feedback ("still slightly dark"). */
   filter: brightness(1.16) saturate(1.06);
 }
-.hero-img.is-active { opacity: 1; transform: scale(1.0); }
 /* the entrance mask — a strong, near-even dark cover on load that
    fades right out once the hero settles */
 .hero-veil {
@@ -779,25 +771,6 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: rgba(255,255,255,.6);
 }
-.hero-pager {
-  position: absolute;
-  /* bottom-left now the settled copy occupies the bottom-right corner */
-  bottom: 32px; left: var(--gutter);
-  display: flex; gap: 10px;
-  z-index: 4;
-}
-.hero-dot {
-  width: 8px; height: 8px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.32);
-  border: 0; padding: 0;
-  transition: width .3s ease, background .3s ease;
-}
-.hero-dot.is-active { width: 32px; background: var(--ncku-gold); border-radius: 4px; }
-@media (max-width: 760px) {
-  .hero-pager { bottom: 18px; }
-}
-
 /* =================================================================
    BAND — red horizontal divider between hero and 學業
    ================================================================= */
