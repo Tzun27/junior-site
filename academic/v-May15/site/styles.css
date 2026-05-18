@@ -632,7 +632,16 @@ a { color: inherit; text-decoration: none; }
    ================================================================= */
 .hero {
   position: relative;
-  min-height: clamp(560px, 86vh, 820px);
+  /* Match the banner aspect (all six rotation slides — b1/b2/b3/b4/b5/b6 —
+     share ≈2.89, dominant exact ratio is 3272×1134 from b2/b3). With
+     `aspect-ratio` the hero height auto-derives from its actual rendered
+     width, so `object-fit: cover` produces no letterbox in either axis at
+     any width above the breakpoint below. Body already pads 108px to
+     clear the fixed topbar, so the hero sits directly under it.
+     Below 1216px (where this aspect would force the hero shorter than
+     420px) the @media block at end of file drops aspect-ratio and uses
+     min-height + `cover`, trading edge crop for hero presence. */
+  aspect-ratio: 3272 / 1134;
   display: flex;
   align-items: flex-end;            /* settled copy rests at the bottom… */
   justify-content: flex-end;        /* …right corner (feedback pt 2) */
@@ -1677,10 +1686,11 @@ a { color: inherit; text-decoration: none; }
      dividers too, or the strip shows orphaned "| | |" pipes. */
   .utility-strip__line { display: none; }
   .utility-strip__divider { display: none; }
-}
 
-@media (max-width: 720px) {
-  :root { --topbar-h: 64px; }
+  /* Hamburger menu kicks in at iPad portrait (≤960) instead of phone-only
+     (≤720), because at 768 the desktop topnav crowds the brand block —
+     7 nav items + brand don't fit horizontally and Chinese nav items wrap
+     to 2 lines each. */
   .topnav {
     position: fixed;
     top: calc(var(--utility-h) + var(--topbar-h)); right: var(--gutter);
@@ -1700,10 +1710,26 @@ a { color: inherit; text-decoration: none; }
     opacity: 1; transform: none; pointer-events: auto;
   }
   .menu-toggle { display: flex; }
+}
+
+@media (max-width: 720px) {
+  :root { --topbar-h: 64px; }
   .schedule-controls { gap: 16px; }
   .band__inner { flex-wrap: wrap; }
   .band__mark { margin-left: 0; }
   .brand-text span { display: none; }
+}
+
+/* Banner fallback: below ~1216px, matching the 2.89 banner aspect would
+   make the hero shorter than 420px — too small to feel like a hero. Drop
+   the aspect-ratio and use a clamped min-height; `cover` is already in
+   effect, so the wide banner is cropped horizontally to fill the hero.
+   `object-position` keeps the default `center 55%` set on .hero-img above. */
+@media (max-width: 1216px) {
+  .hero {
+    aspect-ratio: auto;
+    min-height: clamp(420px, 70vh, 620px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
