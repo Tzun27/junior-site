@@ -228,6 +228,44 @@ a { color: inherit; text-decoration: none; }
   .utility-strip__count { margin-left: 0; }
 }
 
+/* language toggle — sits at the far right of the utility strip, after
+   the visitor count. Same mono/uppercase treatment as the strip so it
+   reads as part of the chrome, not a button bolted on top. */
+.lang-toggle {
+  appearance: none;
+  margin-left: 0.9rem;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 248, 235, 0.45);
+  border-radius: 2px;
+  color: rgba(255, 248, 235, 0.7);
+  font-family: var(--ff-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.lang-toggle:hover,
+.lang-toggle:focus-visible {
+  border-color: #fff;
+  color: #fff;
+  outline: none;
+}
+.lang-toggle [data-lang] {
+  transition: color 0.15s ease;
+}
+.lang-toggle [data-lang].is-active {
+  color: #fff;
+  font-weight: 700;
+}
+.lang-toggle .lang-sep {
+  color: rgba(255, 248, 235, 0.45);
+}
+
 /* =================================================================
    TOPBAR — solid NCKU Red (matches live web.ncku.edu.tw)
    ================================================================= */
@@ -308,6 +346,18 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: #d2a978;                       /* lifted heritage gold, legible on NCKU red */
   border-bottom: 1px solid rgba(210, 169, 120, 0.55);
+}
+/* CJK override — the mono+caps+heavy-tracking treatment above is tuned for
+   Latin like "OVERSEAS EDITION". CJK glyphs in JetBrains Mono fall back to a
+   small system face and the wide tracking makes 6 characters drift apart,
+   so for zh-Hant we switch to Noto Sans TC at a more legible size with
+   normal tracking. */
+html[lang="zh-Hant"] .brand-text__edition {
+  font-family: var(--ff-display);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: none;
 }
 .topnav {
   display: flex;
@@ -650,7 +700,15 @@ a { color: inherit; text-decoration: none; }
    ================================================================= */
 .hero {
   position: relative;
-  min-height: clamp(560px, 86vh, 820px);
+  /* Match b1_v2's 3520×1216 aspect on the hero element itself so the
+     contained image fills with no letterbox in either axis at any width.
+     `aspect-ratio` is computed from the element's actual rendered width,
+     so it naturally excludes the scrollbar that `vw` would include.
+     Below 1216px the hero would have to be <420px tall to preserve aspect,
+     which would feel insubstantial — at that point the @media block below
+     drops aspect-ratio and switches the image to `cover` with a min-height,
+     trading edge crop on the photo for hero presence. */
+  aspect-ratio: 3520 / 1216;
   display: flex;
   align-items: flex-end;            /* settled copy rests at the bottom… */
   justify-content: flex-end;        /* …right corner (feedback pt 2) */
@@ -682,8 +740,14 @@ a { color: inherit; text-decoration: none; }
 .hero-img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: center 55%;
+  /* `contain` keeps the whole 3520×1216 banner in view — the b1_v2 art
+     has baked-in branding text on its left half (OVERSEAS STUDENT SITE,
+     國際事務學生辦公室) that `cover` would clip at typical viewports. The
+     letterbox picks up the dark hero background; bottom-aligning the image
+     pushes that empty space to the top (which the fixed topbar covers
+     anyway), so the hero copy at bottom-right still sits over the photo. */
+  object-fit: contain;
+  object-position: center bottom;
   filter: brightness(1.16) saturate(1.06);
 }
 /* the entrance mask — a strong, near-even dark cover on load that
@@ -1207,6 +1271,9 @@ a { color: inherit; text-decoration: none; }
   .stat:nth-child(2) { border-right: 0; }
   .stat:nth-child(-n+2) { border-bottom: 1px solid var(--ncku-rule); }
   .stat { padding: 24px 16px; }
+  /* Trim the wide letter-spacing on labels at narrow widths so longer EN
+     labels like "SWITCHBOARD · 24 HRS" don't truncate at the column edge. */
+  .stat span { letter-spacing: .12em; }
 }
 @media (max-width: 900px) {
   .schedule-table thead { display: none; }
@@ -1240,6 +1307,22 @@ a { color: inherit; text-decoration: none; }
     margin-bottom: 6px;
   }
   .schedule-table td.cell-num::before { display: none; }
+}
+
+/* Phones (≤720px): EN labels like "OFFICE · EXTENSION" wrap to 2 lines
+   inside the 80px column above, overlapping visually with the value text.
+   Stack the label above the value for unambiguous reading. */
+@media (max-width: 720px) {
+  .schedule-table td {
+    padding: 22px 0 4px 0;
+  }
+  .schedule-table td::before {
+    position: static;
+    display: block;
+    width: auto;
+    margin-bottom: 4px;
+  }
+  .schedule-table td.cell-num { padding-top: 0; }
 }
 
 /* =================================================================
@@ -1668,10 +1751,24 @@ a { color: inherit; text-decoration: none; }
      dividers too, or the strip shows orphaned "| | |" pipes. */
   .utility-strip__line { display: none; }
   .utility-strip__divider { display: none; }
-}
+  /* Utility strip squeeze: keep the lang toggle fully visible by letting
+     the chip absorb the squeeze with an ellipsis, never the toggle. EN's
+     "National Cheng Kung University" would otherwise push the toggle off-
+     screen on narrow phones. */
+  .utility-strip__chip {
+    min-width: 0;
+    flex: 0 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .utility-strip__count { flex-shrink: 0; }
+  .lang-toggle { flex-shrink: 0; }
 
-@media (max-width: 720px) {
-  :root { --topbar-h: 64px; }
+  /* Hamburger menu kicks in at iPad portrait (≤960) instead of phone-only
+     (≤720), because at 768 the desktop topnav crowds the brand block —
+     7 nav items + brand don't fit horizontally and Chinese nav items wrap
+     to 2 lines each. */
   .topnav {
     position: fixed;
     top: calc(var(--utility-h) + var(--topbar-h)); right: var(--gutter);
@@ -1691,6 +1788,10 @@ a { color: inherit; text-decoration: none; }
     opacity: 1; transform: none; pointer-events: auto;
   }
   .menu-toggle { display: flex; }
+}
+
+@media (max-width: 720px) {
+  :root { --topbar-h: 64px; }
   .schedule-controls { gap: 16px; }
   .band__inner { flex-wrap: wrap; }
   .band__mark { margin-left: 0; }
@@ -1701,6 +1802,28 @@ a { color: inherit; text-decoration: none; }
     margin-top: 3px;
     font-size: 0.55rem;
     letter-spacing: 0.24em;
+  }
+}
+/* Banner fallback: below ~1216px, matching b1_v2's wide aspect would make
+   the hero shorter than 420px — too small to feel like a hero. Drop the
+   aspect-ratio and switch the image to `cover`, favouring the photo side
+   so the hero stays a substantial block at the cost of cropping some of
+   the wide baked-in branding text on the left. */
+@media (max-width: 1216px) {
+  .hero {
+    aspect-ratio: auto;
+    min-height: clamp(420px, 70vh, 620px);
+  }
+  .hero-img {
+    object-fit: cover;
+    object-position: 65% center;
+  }
+}
+/* CJK edition mark — keep the size boost on mobile too, but trim slightly. */
+@media (max-width: 960px) {
+  html[lang="zh-Hant"] .brand-text__edition {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
   }
 }
 

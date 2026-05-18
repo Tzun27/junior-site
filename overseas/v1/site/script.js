@@ -1,26 +1,57 @@
 /* =================================================================
    v3 — 新生支持辦公室 · script
+   -----------------------------------------------------------------
+   i18n note: every renderer that emits user-facing text is idempotent
+   and re-runs on the document 'langchange' event (dispatched by i18n.js
+   on boot and on every locale toggle). For static HTML, i18n.js handles
+   text via [data-i18n] attributes directly.
    ================================================================= */
+
+const T = (k) => (window.I18N ? window.I18N.t(k) : k);
+const LANG = () => (window.I18N ? window.I18N.getLang() : "zh-Hant");
+
+// Pick a per-locale field. Accepts either a plain string (legacy) or
+// an object { "zh-Hant": "...", "en": "..." } shape. Always falls back
+// to zh-Hant when the requested locale is missing — important because
+// most FAQ/schedule entries are still zh-only in the prototype.
+function pickLocale(field) {
+  if (field == null) return "";
+  if (typeof field === "string") return field;
+  return field[LANG()] ?? field["zh-Hant"] ?? "";
+}
+
+function onLangChange(fn) {
+  document.addEventListener("langchange", fn);
+}
 
 /* ---------- nav ---------- */
 const NAV = [
-  { num: "00", label: "序章", href: "#scene-00" },
-  { num: "01", label: "學業", href: "#scene-01" },
-  { num: "02", label: "生活", href: "#scene-02" },
-  { num: "03", label: "培力", href: "#scene-03" },
-  { num: "04", label: "校長的話", href: "#scene-04" },
-  { num: "05", label: "重要日程", href: "#scene-05" },
-  { num: "06", label: "常見問題", href: "#scene-06" },
+  { num: "00", labelKey: "nav.scene00", href: "#scene-00" },
+  { num: "01", labelKey: "nav.scene01", href: "#scene-01" },
+  { num: "02", labelKey: "nav.scene02", href: "#scene-02" },
+  { num: "03", labelKey: "nav.scene03", href: "#scene-03" },
+  { num: "04", labelKey: "nav.scene04", href: "#scene-04" },
+  { num: "05", labelKey: "nav.scene05", href: "#scene-05" },
+  { num: "06", labelKey: "nav.scene06", href: "#scene-06" },
 ];
 
 (function buildTopnav() {
   const nav = document.getElementById("topnav");
-  for (const it of NAV) {
-    const a = document.createElement("a");
-    a.href = it.href;
-    a.textContent = it.label;
-    nav.appendChild(a);
+
+  function render() {
+    nav.innerHTML = "";
+    for (const it of NAV) {
+      const a = document.createElement("a");
+      a.href = it.href;
+      a.textContent = T(it.labelKey);
+      nav.appendChild(a);
+    }
   }
+  // Defer initial render to first langchange (fired by i18n boot once the
+  // catalog is loaded) — avoids a flash of "nav.scene00" key strings.
+  if (window.I18N && window.I18N.isReady()) render();
+  onLangChange(render);
+
   const toggle = document.getElementById("menuToggle");
   toggle.addEventListener("click", () => nav.classList.toggle("is-open"));
   nav.addEventListener("click", e => {
@@ -36,15 +67,23 @@ const NAV = [
 /* ---------- right-edge scene rail ---------- */
 (function buildRail() {
   const rail = document.getElementById("sceneRail");
-  for (const it of NAV) {
-    const b = document.createElement("button");
-    b.dataset.target = it.href;
-    b.innerHTML = `<span class="dash"></span><span>${it.num}</span><span class="label">${it.label}</span>`;
-    b.addEventListener("click", () => {
-      document.querySelector(it.href).scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-    rail.appendChild(b);
+
+  function render() {
+    rail.innerHTML = "";
+    for (const it of NAV) {
+      const b = document.createElement("button");
+      b.dataset.target = it.href;
+      b.innerHTML = `<span class="dash"></span><span>${it.num}</span><span class="label">${escapeHTML(T(it.labelKey))}</span>`;
+      b.addEventListener("click", () => {
+        document.querySelector(it.href).scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      rail.appendChild(b);
+    }
+    // active-scene wiring re-binds since we rebuilt buttons
+    rewireActiveRail();
   }
+  if (window.I18N && window.I18N.isReady()) render();
+  onLangChange(render);
 })();
 
 /* ---------- hero entrance — mask-then-zoom (feedback pt 2) ----------
@@ -89,17 +128,12 @@ const NAV = [
    Replace the body of getVisitorCount() with a real counter when one is
    available — e.g. `return fetch("/api/visits").then(r => r.json())` and
    make this IIFE await it, or inject a server-rendered value. As long as
-   getVisitorCount() resolves to a number, nothing else here changes.
-
-   For now it's a localStorage-backed per-load counter: it increments once
-   per page load and persists across visits on the same browser, so the
-   figure feels real rather than hard-coded. */
+   getVisitorCount() resolves to a number, nothing else here changes. */
 (function visitorCount() {
-  const SEED = 18430;            // baseline so a fresh browser isn't "1"
+  const SEED = 18430;
   const KEY = "vmay15.visits";
 
   function getVisitorCount() {
-    // --- mock implementation — see SWAP POINT note above ---
     let n;
     try {
       n = parseInt(window.localStorage.getItem(KEY), 10);
@@ -107,7 +141,6 @@ const NAV = [
       n += 1;
       window.localStorage.setItem(KEY, String(n));
     } catch (e) {
-      // localStorage blocked (private mode etc.) — fall back to the seed
       n = SEED;
     }
     return n;
@@ -116,128 +149,145 @@ const NAV = [
   const el = document.getElementById("visitorCountNum");
   if (!el) return;
   const count = getVisitorCount();
-  el.textContent = Number(count).toLocaleString("en-US");  // thousands separators
+  const fmt = () => { el.textContent = Number(count).toLocaleString(LANG() === "en" ? "en-US" : "zh-Hant"); };
+  // OK to render immediately — number formatting works without a catalog.
+  fmt();
+  onLangChange(fmt);
 })();
 
 /* ---------- president expand ---------- */
 (function presidentExpand() {
   const btn = document.getElementById("presidentExpand");
   const full = document.getElementById("presidentFull");
+  const label = btn.querySelector(".label");
+
+  function syncLabel() {
+    const open = full.classList.contains("is-open");
+    label.textContent = T(open ? "scene04.collapse" : "scene04.expand");
+  }
+  if (window.I18N && window.I18N.isReady()) syncLabel();
+  onLangChange(syncLabel);
+
   btn.addEventListener("click", () => {
     const open = full.classList.toggle("is-open");
     btn.classList.toggle("is-open", open);
-    btn.querySelector(".label").textContent = open ? "收合全文" : "展開全文";
+    syncLabel();
   });
 })();
 
 /* ---------- threads (學業 / 生活 / 培力) ---------- */
 const THREADS = {
   "scene-01": [
-    { ord: "i", head: "查詢學號及資料登錄", items: [
-      { type: "plain", lines: ["學士班(含轉學生)", "新生入學須知"] },
-      { type: "plain", lines: ["學號查詢"] },
-      { type: "plain", lines: ["115學年度分科測驗入學新生", "預計於8/14後開放查詢"] },
-      { type: "link",  lines: ["新生資料登錄"] },
+    { ord: "i", headKey: "threads.s1.head1", items: [
+      { type: "plain", keys: ["threads.s1.h1.i1.l1", "threads.s1.h1.i1.l2"] },
+      { type: "plain", keys: ["threads.s1.h1.i2.l1"] },
+      { type: "plain", keys: ["threads.s1.h1.i3.l1", "threads.s1.h1.i3.l2"] },
+      { type: "link",  keys: ["threads.s1.h1.i4.l1"] },
     ] },
-    { ord: "ii", head: "註冊與選課", items: [
-      { type: "plain", lines: ["學雜費收費標準"] },
-      { type: "plain", lines: ["繳費流程及注意事項"] },
-      { type: "link",  lines: ["學生繳費查詢"] },
-      { type: "plain", lines: ["(僅能使用校內IP位址登入)"] },
-      { type: "link",  lines: ["臺銀學雜費入口網"] },
-      { type: "link",  lines: ["學士班新生選課說明"] },
-      { type: "link",  lines: ["課程資訊及選課系統"] },
-      { type: "link",  lines: ["學分抵免"] },
-      { type: "link",  lines: ["英文免修"] },
-      { type: "plain", lines: ["英語能力分級測驗", "及檢定成績上傳"] },
-      { type: "link",  lines: ["英外語選課及加簽規定"] },
-      { type: "link",  lines: ["踏溯台南"] },
+    { ord: "ii", headKey: "threads.s1.head2", items: [
+      { type: "plain", keys: ["threads.s1.h2.i1.l1"] },
+      { type: "plain", keys: ["threads.s1.h2.i2.l1"] },
+      { type: "link",  keys: ["threads.s1.h2.i3.l1"] },
+      { type: "plain", keys: ["threads.s1.h2.i4.l1"] },
+      { type: "link",  keys: ["threads.s1.h2.i5.l1"] },
+      { type: "link",  keys: ["threads.s1.h2.i6.l1"] },
+      { type: "link",  keys: ["threads.s1.h2.i7.l1"] },
+      { type: "link",  keys: ["threads.s1.h2.i8.l1"] },
+      { type: "link",  keys: ["threads.s1.h2.i9.l1"] },
+      { type: "plain", keys: ["threads.s1.h2.i10.l1", "threads.s1.h2.i10.l2"] },
+      { type: "link",  keys: ["threads.s1.h2.i11.l1"] },
+      { type: "link",  keys: ["threads.s1.h2.i12.l1"] },
     ] },
-    { ord: "iii", head: "學習資源", items: [
-      { type: "link",  lines: ["大學預修課程(AP)"] },
-      { type: "plain", lines: ["雙語教學資源"] },
-      { type: "plain", lines: ["免費課輔活動"] },
-      { type: "link",  lines: ["教育學程"] },
-      { type: "link",  lines: ["TREVI揪課"] },
-      { type: "link",  lines: ["轉系、輔系雙主修"] },
-      { type: "link",  lines: ["跨領域學分學程"] },
-      { type: "link",  lines: ["專長微學程"] },
+    { ord: "iii", headKey: "threads.s1.head3", items: [
+      { type: "link",  keys: ["threads.s1.h3.i1.l1"] },
+      { type: "plain", keys: ["threads.s1.h3.i2.l1"] },
+      { type: "plain", keys: ["threads.s1.h3.i3.l1"] },
+      { type: "link",  keys: ["threads.s1.h3.i4.l1"] },
+      { type: "link",  keys: ["threads.s1.h3.i5.l1"] },
+      { type: "link",  keys: ["threads.s1.h3.i6.l1"] },
+      { type: "link",  keys: ["threads.s1.h3.i7.l1"] },
+      { type: "link",  keys: ["threads.s1.h3.i8.l1"] },
     ] },
   ],
   "scene-02": [
-    { ord: "i", head: "新生活動", items: [
-      { type: "plain", lines: ["成功登大人", "(新鮮人成長營)"] },
-      { type: "plain", lines: ["新生體檢"] },
-      { type: "link",  lines: ["新生適應力檢測"] },
-      { type: "plain", lines: ["UR大學部研究", "Undergraduate Research"] },
-      { type: "link",  lines: ["原住民族學生資源中心"] },
+    { ord: "i", headKey: "threads.s2.head1", items: [
+      { type: "plain", keys: ["threads.s2.h1.i1.l1", "threads.s2.h1.i1.l2"] },
+      { type: "plain", keys: ["threads.s2.h1.i2.l1"] },
+      { type: "link",  keys: ["threads.s2.h1.i3.l1"] },
+      { type: "plain", keys: ["threads.s2.h1.i4.l1", "threads.s2.h1.i4.l2"] },
+      { type: "link",  keys: ["threads.s2.h1.i5.l1"] },
     ] },
-    { ord: "ii", head: "獎助學金", items: [
-      { type: "plain", lines: ["獎學金申請"] },
-      { type: "plain", lines: ["榕園圓夢助學網", "(就學貸款、學雜費減免、", "助學、急難救助)"] },
+    { ord: "ii", headKey: "threads.s2.head2", items: [
+      { type: "plain", keys: ["threads.s2.h2.i1.l1"] },
+      { type: "plain", keys: ["threads.s2.h2.i2.l1", "threads.s2.h2.i2.l2", "threads.s2.h2.i2.l3"] },
     ] },
-    { ord: "iii", head: "Overseas Students", items: [
-      { type: "accent", lines: ["Overseas Students", "境外生"] },
+    { ord: "iii", headKey: "threads.s2.head3", items: [
+      { type: "accent", keys: ["threads.s2.h3.i1.l1", "threads.s2.h3.i1.l2"] },
     ] },
-    { ord: "iv", head: "住宿及交通", items: [
-      { type: "plain", lines: ["宿舍申請及介紹"] },
-      { type: "plain", lines: ["機車停車證申請", "與自行車管理"] },
-      { type: "link",  lines: ["交通資訊"] },
-      { type: "link",  lines: ["護送天使"] },
+    { ord: "iv", headKey: "threads.s2.head4", items: [
+      { type: "plain", keys: ["threads.s2.h4.i1.l1"] },
+      { type: "plain", keys: ["threads.s2.h4.i2.l1", "threads.s2.h4.i2.l2"] },
+      { type: "link",  keys: ["threads.s2.h4.i3.l1"] },
+      { type: "link",  keys: ["threads.s2.h4.i4.l1"] },
     ] },
   ],
   "scene-03": [
-    { ord: "i", head: "幸福成大", items: [
-      { type: "plain", lines: ["職業興趣探索與職能診斷"] },
-      { type: "plain", lines: ["NCKU FUTURE SUCCESS+", "個人化學職涯規劃系統"] },
-      { type: "link",  lines: ["性別平等"] },
-      { type: "link",  lines: ["特教服務"] },
-      { type: "link",  lines: ["社團e化系統"] },
+    { ord: "i", headKey: "threads.s3.head1", items: [
+      { type: "plain", keys: ["threads.s3.h1.i1.l1"] },
+      { type: "plain", keys: ["threads.s3.h1.i2.l1", "threads.s3.h1.i2.l2"] },
+      { type: "link",  keys: ["threads.s3.h1.i3.l1"] },
+      { type: "link",  keys: ["threads.s3.h1.i4.l1"] },
+      { type: "link",  keys: ["threads.s3.h1.i5.l1"] },
     ] },
-    { ord: "ii", head: "資訊服務", items: [
-      { type: "plain", lines: ["資訊與網路服務"] },
-      { type: "plain", lines: ["授權軟體下載"] },
-      { type: "link",  lines: ["圖書館"] },
-      { type: "link",  lines: ["KUAP"] },
+    { ord: "ii", headKey: "threads.s3.head2", items: [
+      { type: "plain", keys: ["threads.s3.h2.i1.l1"] },
+      { type: "plain", keys: ["threads.s3.h2.i2.l1"] },
+      { type: "link",  keys: ["threads.s3.h2.i3.l1"] },
+      { type: "link",  keys: ["threads.s3.h2.i4.l1"] },
     ] },
-    { ord: "iii", head: "其他", items: [
-      { type: "plain", lines: ["行事曆"] },
-      { type: "plain", lines: ["學生會"] },
-      { type: "link",  lines: ["學生兵役"] },
-      { type: "link",  lines: ["成大校刊"] },
+    { ord: "iii", headKey: "threads.s3.head3", items: [
+      { type: "plain", keys: ["threads.s3.h3.i1.l1"] },
+      { type: "plain", keys: ["threads.s3.h3.i2.l1"] },
+      { type: "link",  keys: ["threads.s3.h3.i3.l1"] },
+      { type: "link",  keys: ["threads.s3.h3.i4.l1"] },
     ] },
   ],
 };
 
 (function buildThreads() {
-  for (const [sceneId, sets] of Object.entries(THREADS)) {
-    const root = document.querySelector(`#${sceneId} .threads`);
-    if (!root) continue;
-    sets.forEach((set, idx) => {
-      const card = document.createElement("article");
-      card.className = "thread reveal";
-      card.dataset.stagger = String((idx % 6) + 1);
-      const head = document.createElement("header");
-      head.className = "thread__head";
-      head.innerHTML = `<h3>${escapeHTML(set.head)}</h3><span class="ord">${set.ord}</span>`;
-      card.appendChild(head);
-      const ul = document.createElement("ul");
-      ul.className = "thread__list";
-      for (const it of set.items) {
-        const li = document.createElement("li");
-        const cls = it.type === "link" ? "is-link"
-                  : it.type === "accent" ? "is-accent"
-                  : "";
-        if (cls) li.className = cls;
-        li.innerHTML = it.lines
-          .map((l, i) => i === 0 ? escapeHTML(l) : `<small>${escapeHTML(l)}</small>`)
-          .join("");
-        ul.appendChild(li);
-      }
-      card.appendChild(ul);
-      root.appendChild(card);
-    });
+  function render() {
+    for (const [sceneId, sets] of Object.entries(THREADS)) {
+      const root = document.querySelector(`#${sceneId} .threads`);
+      if (!root) continue;
+      root.innerHTML = "";
+      sets.forEach((set, idx) => {
+        const card = document.createElement("article");
+        card.className = "thread reveal is-in";  // skip the reveal anim on re-render
+        card.dataset.stagger = String((idx % 6) + 1);
+        const head = document.createElement("header");
+        head.className = "thread__head";
+        head.innerHTML = `<h3>${escapeHTML(T(set.headKey))}</h3><span class="ord">${set.ord}</span>`;
+        card.appendChild(head);
+        const ul = document.createElement("ul");
+        ul.className = "thread__list";
+        for (const it of set.items) {
+          const li = document.createElement("li");
+          const cls = it.type === "link" ? "is-link"
+                    : it.type === "accent" ? "is-accent"
+                    : "";
+          if (cls) li.className = cls;
+          li.innerHTML = it.keys
+            .map((k, i) => i === 0 ? escapeHTML(T(k)) : `<small>${escapeHTML(T(k))}</small>`)
+            .join("");
+          ul.appendChild(li);
+        }
+        card.appendChild(ul);
+        root.appendChild(card);
+      });
+    }
   }
+  if (window.I18N && window.I18N.isReady()) render();
+  onLangChange(render);
 })();
 
 /* ---------- schedule (grafted from v4 — editorial table) ---------- */
@@ -256,51 +306,63 @@ async function loadJSON(path) {
   const statRows = document.getElementById("statRows");
   const tabs = document.querySelectorAll("#whoTabs .who-tab");
 
-  // Enrich each row with its set of audiences (covers cases where the
-  // JSON's `who` field omits an audience mentioned in the content blob).
+  // Audience canonical codes — entries in schedule.json use these directly.
+  // Tab buttons carry data-audience-code; the visible label is filled from
+  // the catalog (see annotate index.html).
+  const AUDIENCE_UNDERGRAD = "undergrad";
+  const AUDIENCE_GRAD = "grad";
+
+  // Enrich each row with its set of audiences. JSON entries carry `who` as
+  // a code or array of codes; legacy strings get normalised.
   const enriched = rows.map(r => {
     const audiences = new Set();
-    if (r.who) audiences.add(r.who);
-    const c = r.content || "";
-    if (c.includes("一般新生/轉學生")) audiences.add("一般新生/轉學生");
-    if (c.includes("碩/專/博班新生")) audiences.add("碩/專/博班新生");
+    const w = r.who;
+    if (Array.isArray(w)) w.forEach(a => audiences.add(a));
+    else if (typeof w === "string") audiences.add(w);
+    // Some legacy entries name a second audience inside the content body —
+    // we previously detected this from the Chinese string; with structured
+    // localised content we trust the `who` field.
     return { ...r, audiences: [...audiences] };
   });
 
   if (statRows) statRows.textContent = enriched.length;
 
+  // Legacy data once encoded second-audience hints as trailing ；一般新生/轉學生
+  // strings inside the Chinese content. We carry the audience codes structurally
+  // now, so strip those markers (zh side only) before rendering.
   function stripWhoMentions(s) {
-    return String(s)
+    return String(s || "")
       .replace(/[；;]\s*一般新生\/轉學生\s*$/g, "")
       .replace(/[；;]\s*碩\/專\/博班新生\s*$/g, "");
   }
 
-  function render(filter) {
+  let active = AUDIENCE_UNDERGRAD;
+
+  function render() {
     body.innerHTML = "";
     let i = 0;
     enriched
-      .filter(r => !filter || r.audiences.includes(filter))
+      .filter(r => !active || r.audiences.includes(active))
       .forEach(r => {
         i += 1;
-        const tr = document.createElement("tr");
         const audiencePills = r.audiences
-          .map(a => `<span class="who-pill">${escapeHTML(a)}</span>`)
+          .map(a => `<span class="who-pill">${escapeHTML(T("scene05.audience." + a))}</span>`)
           .join("");
+        const tr = document.createElement("tr");
         tr.innerHTML = `
           <td class="cell-num" data-label="#">${String(i).padStart(2, "0")}</td>
-          <td class="cell-item" data-label="事項"><a href="#">${escapeHTML(r.item)}</a></td>
-          <td class="cell-time" data-label="辦理時間">${escapeHTML(r.time)}</td>
-          <td class="cell-content" data-label="內容">${formatMulti(stripWhoMentions(r.content))}${audiencePills ? `<div class="who-pills">${audiencePills}</div>` : ""}</td>
-          <td class="cell-dept" data-label="承辦單位">${escapeHTML(r.dept)}</td>
+          <td class="cell-item" data-label="${escapeHTML(T("scene05.col.item"))}"><a href="#">${escapeHTML(pickLocale(r.item))}</a></td>
+          <td class="cell-time" data-label="${escapeHTML(T("scene05.col.time"))}">${escapeHTML(pickLocale(r.time))}</td>
+          <td class="cell-content" data-label="${escapeHTML(T("scene05.col.content"))}">${formatMulti(stripWhoMentions(pickLocale(r.content)))}${audiencePills ? `<div class="who-pills">${audiencePills}</div>` : ""}</td>
+          <td class="cell-dept" data-label="${escapeHTML(T("scene05.col.dept"))}">${escapeHTML(pickLocale(r.dept))}</td>
         `;
         body.appendChild(tr);
       });
     if (!body.children.length) {
-      body.innerHTML = `<tr><td colspan="5" style="padding:36px;text-align:center;color:var(--ncku-grey-mid);">此身份目前沒有列出的事項。</td></tr>`;
+      body.innerHTML = `<tr><td colspan="5" style="padding:36px;text-align:center;color:var(--ncku-grey-mid);">${escapeHTML(T("scene05.empty"))}</td></tr>`;
     }
   }
 
-  let active = "一般新生/轉學生";
   tabs.forEach(t => {
     t.addEventListener("click", () => {
       tabs.forEach(x => {
@@ -309,11 +371,12 @@ async function loadJSON(path) {
       });
       t.classList.add("active");
       t.setAttribute("aria-selected", "true");
-      active = t.dataset.who;
-      render(active);
+      active = t.dataset.audienceCode || AUDIENCE_UNDERGRAD;
+      render();
     });
   });
-  render(active);
+  if (window.I18N && window.I18N.isReady()) render();
+  onLangChange(render);
 })();
 
 /* ---------- FAQ (grafted from v4 — underline search + accordion) ---------- */
@@ -335,7 +398,8 @@ async function loadJSON(path) {
   const counter = document.getElementById("resultCount");
   const form = document.getElementById("faqForm");
 
-  // hot keywords (from meta, fallback to a sensible set)
+  // hot keywords — from meta, fallback to a sensible set. These stay in zh
+  // even in EN mode because they're shortcuts into Chinese FAQ content.
   const HOT = (meta.hot && meta.hot.length) ? meta.hot
     : ["宿舍", "選課", "交換生", "學號", "申請", "註冊"];
   HOT.forEach(k => {
@@ -346,26 +410,63 @@ async function loadJSON(path) {
     hotEl.appendChild(b);
   });
 
-  // category select — derive from items so it stays in sync
-  const cats = [...new Set(items.map(i => i.category).filter(Boolean))].sort();
-  cats.forEach(c => {
-    const o = document.createElement("option");
-    o.value = c; o.textContent = c;
-    select.appendChild(o);
-  });
+  // category select — derive from items; categories are per-locale objects.
+  function rebuildCategorySelect() {
+    const prevVal = select.value;
+    // keep the "All" option (which is annotated with data-i18n)
+    select.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = "";
+    allOpt.textContent = T("scene06.category.all");
+    select.appendChild(allOpt);
+    const seen = new Set();
+    items.forEach(it => {
+      const code = it.categoryId || (typeof it.category === "string" ? it.category : pickLocale(it.category));
+      if (!code || seen.has(code)) return;
+      seen.add(code);
+      const o = document.createElement("option");
+      o.value = code;
+      o.textContent = pickLocale(it.category) || code;
+      select.appendChild(o);
+    });
+    // restore previous selection if still valid
+    if (prevVal && [...select.options].some(o => o.value === prevVal)) {
+      select.value = prevVal;
+    }
+  }
+  rebuildCategorySelect();
+
+  function itemMatches(it, q, cat) {
+    if (cat) {
+      const code = it.categoryId || (typeof it.category === "string" ? it.category : pickLocale(it.category));
+      if (code !== cat) return false;
+    }
+    if (q) {
+      // Search across both locales of question/answer so a zh-only entry is
+      // still findable when the UI is in EN mode.
+      const hay = [
+        flatten(it.question), flatten(it.answer), flatten(it.category),
+      ].join(" ");
+      if (!hay.toLowerCase().includes(q.toLowerCase())) return false;
+    }
+    return true;
+  }
+
+  // collect all locale values of a possibly-localised field into one string
+  function flatten(field) {
+    if (field == null) return "";
+    if (typeof field === "string") return field;
+    return Object.values(field).join(" ");
+  }
 
   function render() {
     const q = search.value.trim();
     const cat = select.value;
-    const filtered = items.filter(it => {
-      if (cat && it.category !== cat) return false;
-      if (q && !(it.question.includes(q) || it.answer.includes(q) || (it.category || "").includes(q))) return false;
-      return true;
-    });
+    const filtered = items.filter(it => itemMatches(it, q, cat));
 
     list.innerHTML = "";
     counter.textContent = filtered.length
-      ? `${filtered.length} / ${items.length} 題`
+      ? T("scene06.count").replace("{n}", filtered.length).replace("{total}", items.length)
       : "";
 
     if (!filtered.length) {
@@ -380,15 +481,15 @@ async function loadJSON(path) {
       el.innerHTML = `
         <button class="faq-bar" aria-expanded="false">
           <span class="qid">${escapeHTML(it.id)}</span>
-          <span class="qcat">${escapeHTML(it.category || "")}</span>
-          <span class="qtext">${escapeHTML(it.question)}</span>
+          <span class="qcat">${escapeHTML(pickLocale(it.category))}</span>
+          <span class="qtext">${escapeHTML(pickLocale(it.question))}</span>
           <span class="toggle" aria-hidden="true">+</span>
         </button>
         <div class="faq-content">
-          <div class="answer">${formatAnswer(it.answer)}</div>
+          <div class="answer">${formatAnswer(pickLocale(it.answer))}</div>
           <div class="meta">
-            <span><b>承辦單位</b>${escapeHTML(it.unit || "—")}</span>
-            <span><b>瀏覽次數</b>${Number(it.views || 0).toLocaleString()}</span>
+            <span><b>${escapeHTML(T("scene06.faq.unit"))}</b>${escapeHTML(pickLocale(it.unit) || "—")}</span>
+            <span><b>${escapeHTML(T("scene06.faq.views"))}</b>${Number(it.views || 0).toLocaleString()}</span>
           </div>
         </div>
       `;
@@ -404,7 +505,8 @@ async function loadJSON(path) {
   search.addEventListener("input", render);
   select.addEventListener("change", render);
   if (form) form.addEventListener("submit", e => { e.preventDefault(); render(); });
-  render();
+  if (window.I18N && window.I18N.isReady()) render();
+  onLangChange(() => { rebuildCategorySelect(); render(); });
 })();
 
 /* ---------- floating action button ---------- */
@@ -440,8 +542,12 @@ function observeReveals(nodes) {
 }
 observeReveals(document.querySelectorAll(".reveal"));
 
-/* ---------- active scene rail (intersection) ---------- */
-(function activeScene() {
+/* ---------- active scene rail (intersection) ----------
+   Re-binds whenever the rail is rebuilt (e.g. on language toggle) so the
+   observer always points at the current buttons. */
+let _railDisconnect = null;
+function rewireActiveRail() {
+  if (_railDisconnect) _railDisconnect();
   const rail = document.getElementById("sceneRail");
   const buttons = document.querySelectorAll("#sceneRail button");
   const map = new Map();
@@ -468,7 +574,10 @@ observeReveals(document.querySelectorAll(".reveal"));
     });
   }, { rootMargin: "-50% 0px -50% 0px" });
   document.querySelectorAll(".scene--maroon").forEach(s => darkObs.observe(s));
-})();
+
+  _railDisconnect = () => { obs.disconnect(); darkObs.disconnect(); };
+}
+rewireActiveRail();
 
 /* ---------- helpers ---------- */
 function escapeHTML(s) {

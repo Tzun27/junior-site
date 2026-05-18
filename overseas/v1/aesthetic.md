@@ -89,6 +89,51 @@ redesign (see the header note in the feedback markdown).
 - The schedule/FAQ sections sit inside the v3_2 `.scene` shell, so they keep the
   red ribbon section number — that consistency is intentional, not an oversight.
 
+## i18n — language toggle (added 2026-05-18)
+
+The Overseas Edition carries a zh / en toggle on the right end of the gold
+utility strip. The mechanism is the **flat-key JSON catalog + runtime `data-i18n`**
+pattern that's standard across `react-i18next` / `next-intl` / `vue-i18n`.
+
+- Catalogs live at `site/i18n/zh-Hant.json` and `site/i18n/en.json` — flat
+  string keys, the exact shape consumed by `next-intl` (`messages/<locale>.json`)
+  and `react-i18next` (`<locale>/translation.json`).
+- Static text in `index.html` is annotated with `data-i18n="key"` (text content)
+  or `data-i18n-attr="attr:key,…"` (attributes). The page source-of-truth
+  language is still Traditional Chinese — English is layered on at runtime.
+- Dynamic renderers in `script.js` (NAV, THREADS, schedule, FAQ, president
+  expand label) read their copy through `I18N.t(key)` and re-render on the
+  `langchange` CustomEvent the engine dispatches on boot and every toggle.
+- Data records in `data/faq.json` and `data/schedule.json` carry text fields
+  as per-locale objects: `{ "zh-Hant": "…", "en": "…" }`. The renderer reads
+  `field[currentLang] ?? field["zh-Hant"]`, so an entry without an English
+  translation falls back to Chinese cleanly. Only ~5–10 sample entries in
+  each file are seeded with English in the prototype; the rest fall back.
+- Locale preference is detected from `localStorage("ofy.lang")` → else
+  `navigator.language` (any `en-*` → `en`, else `zh-Hant`). The toggle
+  persists the choice to localStorage; `<html lang>` is flipped on every
+  swap.
+
+**Upgrade path to prod.** The user's intended prod stack is React-based
+(see the project memory). The same catalog files port unchanged into
+`next-intl` / `react-i18next`:
+
+| Prototype (today) | Prod (React, eventually) |
+| --- | --- |
+| `site/i18n/<locale>.json` | `messages/<locale>.json` (Next.js + next-intl) or `public/locales/<locale>/translation.json` (react-i18next) |
+| `data-i18n="hero.lede"` | `{t("hero.lede")}` in JSX |
+| Single URL, runtime swap | `/zh/...` & `/en/...` via Next.js `[locale]` segment + middleware |
+| Per-locale fields on FAQ / schedule records | unchanged — same `field[locale]` lookup |
+
+If SEO-friendly URLs become the priority before the React rewrite,
+**Next.js + next-intl** is the cleanest fit (App Router's `[locale]` segment
+handles the routing). **Vite + react-i18next** is a lighter alternative but
+needs a pre-render step (e.g. `vite-ssg`) to get per-locale URLs.
+
+Do **not** duplicate `index.html` per language — that path was considered
+and rejected. The catalog approach is the floor for any future maintainer
+who needs to add a third locale or hand translations to non-engineers.
+
 ## Sources
 
 - `../feedback/converted/新生支持辦公室網頁改版意見.md` — the review this version answers.
