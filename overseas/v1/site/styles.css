@@ -195,6 +195,15 @@ a { color: inherit; text-decoration: none; }
   color: rgba(255, 248, 235, 0.78);
   outline: none;
 }
+/* Mobile chip: at ≤760 the i18n value shrinks to the short form for both
+   locales — ZH drops the " NCKU" suffix, EN swaps the full
+   "National Cheng Kung University" for plain "NCKU". The two spans in
+   each i18n value toggle visibility via these rules. */
+.utility-strip__chip-mobile-only { display: none; }
+@media (max-width: 760px) {
+  .utility-strip__chip-extra { display: none; }
+  .utility-strip__chip-mobile-only { display: inline; }
+}
 .utility-strip__divider {
   width: 1px;
   height: 12px;
@@ -704,10 +713,11 @@ html[lang="zh-Hant"] .brand-text__edition {
      contained image fills with no letterbox in either axis at any width.
      `aspect-ratio` is computed from the element's actual rendered width,
      so it naturally excludes the scrollbar that `vw` would include.
-     Below 1216px the hero would have to be <420px tall to preserve aspect,
-     which would feel insubstantial — at that point the @media block below
-     drops aspect-ratio and switches the image to `cover` with a min-height,
-     trading edge crop on the photo for hero presence. */
+     The aspect-ratio applies at every width ≥761; below 760 the @media
+     block at the end of this file switches to a stacked layout where the
+     banner sits in its own block (still 2.895 aspect to preserve the
+     wide artwork intact) and the eyebrow/title/lede/CTAs flow as a
+     white-bg section beneath it. */
   aspect-ratio: 3520 / 1216;
   display: flex;
   align-items: flex-end;            /* settled copy rests at the bottom… */
@@ -715,7 +725,7 @@ html[lang="zh-Hant"] .brand-text__edition {
   /* bottom padding lifts the resting copy clear of the fixed FAB; living
      on the hero (not .hero-content) keeps the content box clean to measure.
      Right padding is the rail lane so the settled copy clears the rail. */
-  padding: 0 var(--rail-lane) clamp(72px, 12vh, 128px) var(--gutter);
+  padding: 0 var(--rail-lane) clamp(48px, 8vh, 88px) var(--gutter);
   isolation: isolate;
   overflow: hidden;
   background: var(--ncku-near-black);
@@ -772,7 +782,7 @@ html[lang="zh-Hant"] .brand-text__edition {
      approximation; heroIntro() measures the resting box and pins it to
      the exact hero centre on load. */
   transform: translate(calc(-50vw + var(--rail-lane) + 50%),
-                       calc(-43vh + 50% + clamp(72px, 12vh, 128px))) scale(1.3);
+                       calc(-43vh + 50% + clamp(48px, 8vh, 88px))) scale(1.3);
   transition: transform 1.2s var(--ease);
 }
 /* state B — zoomed down to its resting compact bottom-right position */
@@ -1804,19 +1814,85 @@ html[lang="zh-Hant"] .brand-text__edition {
     letter-spacing: 0.24em;
   }
 }
-/* Banner fallback: below ~1216px, matching b1_v2's wide aspect would make
-   the hero shorter than 420px — too small to feel like a hero. Drop the
-   aspect-ratio and switch the image to `cover`, favouring the photo side
-   so the hero stays a substantial block at the cost of cropping some of
-   the wide baked-in branding text on the left. */
-@media (max-width: 1216px) {
+/* Tablet/small-laptop zone: hero is short (~265–420px) because aspect-ratio
+   matches the wide banner. The default bottom padding (8vh, ~80px at iPad
+   height) would still consume most of the hero — reclaim it and trim the
+   type-scale so the four overlay blocks (eyebrow + heading + lede + CTAs)
+   fit inside. */
+@media (max-width: 1216px) and (min-width: 761px) {
+  .hero {
+    padding-bottom: clamp(16px, 4vh, 32px);
+  }
+  .hero-eyebrow { font-size: .68rem; margin-bottom: .5rem; }
+  .hero-title {
+    font-size: clamp(1.3rem, 2.4vw, 1.85rem);
+    line-height: 1.1;
+    margin-bottom: .5rem;
+  }
+  .hero-lede {
+    font-size: clamp(.78rem, .95vw, .88rem);
+    line-height: 1.5;
+    margin-bottom: .75rem;
+  }
+}
+
+/* Mobile (≤760): split the hero into two stacked blocks instead of an
+   overlay. The wide banner (still 2.895 aspect — no portrait mobile crop
+   for the overseas edition exists yet) sits at the top as a short strip;
+   the eyebrow/heading/lede/CTAs flow in a normal padded section beneath
+   it on a clean white background. Avoids the unfixable clash between the
+   page heading and the banner's baked-in "世界在這裡" copy on small
+   screens. When a portrait-aspect mobile crop becomes available, wrap
+   the <img> in <picture> and update .hero-media's aspect-ratio. */
+@media (max-width: 760px) {
   .hero {
     aspect-ratio: auto;
-    min-height: clamp(420px, 70vh, 620px);
+    display: block;
+    padding: 0;
+    background: var(--ncku-white);
+    color: var(--ncku-near-black);
+    overflow: visible;
   }
-  .hero-img {
-    object-fit: cover;
-    object-position: 65% center;
+  .hero::before { display: none; }
+
+  .hero-media {
+    position: relative;
+    inset: auto;
+    aspect-ratio: 3520 / 1216;
+    width: 100%;
+  }
+
+  .hero-content {
+    max-width: none;
+    padding: clamp(28px, 6vw, 40px) var(--gutter) clamp(32px, 7vw, 44px);
+    text-shadow: none;
+    transform: none !important;
+  }
+  .hero-eyebrow {
+    color: var(--ncku-red);
+    font-size: .72rem;
+    margin-bottom: .9rem;
+  }
+  .hero-rule { background: var(--ncku-red); }
+  .hero-title {
+    color: var(--ncku-near-black);
+    font-size: clamp(1.7rem, 7vw, 2.4rem);
+    line-height: 1.12;
+    margin-bottom: .9rem;
+  }
+  .hero-lede {
+    color: rgba(0, 0, 0, .7);
+    font-size: clamp(.92rem, 3.6vw, 1.02rem);
+    margin-bottom: 1.4rem;
+  }
+  .hero .btn-ghost {
+    color: var(--ncku-near-black);
+    border-color: rgba(0, 0, 0, .22);
+  }
+  .hero .btn-ghost:hover {
+    background: rgba(0, 0, 0, .04);
+    border-color: var(--ncku-near-black);
+    color: var(--ncku-near-black);
   }
 }
 /* CJK edition mark — keep the size boost on mobile too, but trim slightly. */

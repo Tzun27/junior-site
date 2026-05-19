@@ -5,7 +5,7 @@
   "meta.title": "Office of Overseas Student Support · NCKU",
   "meta.description": "NCKU Office of Overseas Student Support — with you from arrival through academics, campus life, and beyond.",
 
-  "utility.ncku": "National Cheng Kung University",
+  "utility.ncku": "<span class=\"utility-strip__chip-mobile-only\">NCKU</span><span class=\"utility-strip__chip-extra\">National Cheng Kung University</span>",
   "utility.office": "Office of Overseas Student Support · NCKU",
   "utility.year": "Academic Year 2026–27 · A New Beginning",
   "utility.visitors": "Visitors",
