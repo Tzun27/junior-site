@@ -195,6 +195,11 @@ a { color: inherit; text-decoration: none; }
   color: rgba(255, 248, 235, 0.78);
   outline: none;
 }
+/* Mobile chip: drop the " NCKU" suffix (utility-strip__chip-extra) at narrow
+   widths so the chip never has to ellipsis-truncate "國立成功大學 NCKU". */
+@media (max-width: 760px) {
+  .utility-strip__chip-extra { display: none; }
+}
 .utility-strip__divider {
   width: 1px;
   height: 12px;
@@ -632,15 +637,15 @@ a { color: inherit; text-decoration: none; }
    ================================================================= */
 .hero {
   position: relative;
-  /* Match the banner aspect (all six rotation slides — b1/b2/b3/b4/b5/b6 —
-     share ≈2.89, dominant exact ratio is 3272×1134 from b2/b3). With
-     `aspect-ratio` the hero height auto-derives from its actual rendered
-     width, so `object-fit: cover` produces no letterbox in either axis at
-     any width above the breakpoint below. Body already pads 108px to
-     clear the fixed topbar, so the hero sits directly under it.
-     Below 1216px (where this aspect would force the hero shorter than
-     420px) the @media block at end of file drops aspect-ratio and uses
-     min-height + `cover`, trading edge crop for hero presence. */
+  /* Match the banner aspect so `object-fit: cover` never crops or
+     letterboxes the image. All three desktop rotation slides — b1_v2,
+     b3, b4 — share ≈2.89 (3272×1134 dominant). The aspect-ratio applies
+     at every width ≥761; below 760 the @media block at the end of the
+     file switches to the mobile-banner aspect (3474×3994 ≈ 0.870, shared
+     by b1_v2_mobile / b3_mobile / b4_mobile). Result: hero shrinks to
+     ~266px tall at 768wide and ~882px tall at the 760 mobile boundary,
+     but the banner is never cropped at any viewport. Body already pads
+     108px to clear the fixed topbar, so the hero sits directly under it. */
   aspect-ratio: 3272 / 1134;
   display: flex;
   align-items: flex-end;            /* settled copy rests at the bottom… */
@@ -648,7 +653,7 @@ a { color: inherit; text-decoration: none; }
   /* bottom padding lifts the resting copy clear of the fixed FAB; living
      on the hero (not .hero-content) keeps the content box clean to measure.
      Right padding is the rail lane so the settled copy clears the rail. */
-  padding: 0 var(--rail-lane) clamp(72px, 12vh, 128px) var(--gutter);
+  padding: 0 var(--rail-lane) clamp(48px, 8vh, 88px) var(--gutter);
   isolation: isolate;
   overflow: hidden;
   background: var(--ncku-near-black);
@@ -707,7 +712,7 @@ a { color: inherit; text-decoration: none; }
      approximation; heroIntro() measures the resting box and pins it to
      the exact hero centre on load. */
   transform: translate(calc(-50vw + var(--rail-lane) + 50%),
-                       calc(-43vh + 50% + clamp(72px, 12vh, 128px))) scale(1.3);
+                       calc(-43vh + 50% + clamp(48px, 8vh, 88px))) scale(1.3);
   transition: transform 1.2s var(--ease);
 }
 /* state B — zoomed down to its resting compact bottom-right position */
@@ -1720,15 +1725,92 @@ a { color: inherit; text-decoration: none; }
   .brand-text span { display: none; }
 }
 
-/* Banner fallback: below ~1216px, matching the 2.89 banner aspect would
-   make the hero shorter than 420px — too small to feel like a hero. Drop
-   the aspect-ratio and use a clamped min-height; `cover` is already in
-   effect, so the wide banner is cropped horizontally to fill the hero.
-   `object-position` keeps the default `center 55%` set on .hero-img above. */
-@media (max-width: 1216px) {
+/* Mobile banner aspect: the <picture> sources switch to the _mobile.jpg
+   crops at ≤760, all of which share 0.870 (b1_v2_mobile = 3474×3994,
+   b3_mobile = 984×1131 after recrop, b4_mobile = 1667×1917 ≈ 0.870).
+   Matching the hero aspect to those crops keeps `object-fit: cover` from
+   cropping at narrow widths the way it would with the wide desktop aspect. */
+/* Tablet/small-laptop zone: hero is short (~261–420px) because aspect-ratio
+   matches the wide desktop banner. The default bottom padding (12vh, ~120px
+   at iPad height) would consume half the hero and clip the overlay copy.
+   Reclaim padding and trim the type-scale so the four overlay blocks
+   (eyebrow + 2-line heading + lede + CTAs) fit. */
+@media (max-width: 1216px) and (min-width: 761px) {
+  .hero {
+    padding-bottom: clamp(16px, 4vh, 32px);
+  }
+  .hero-eyebrow { font-size: .68rem; margin-bottom: .5rem; }
+  .hero-title {
+    font-size: clamp(1.3rem, 2.4vw, 1.85rem);
+    line-height: 1.1;
+    margin-bottom: .5rem;
+  }
+  .hero-lede {
+    font-size: clamp(.78rem, .95vw, .88rem);
+    line-height: 1.5;
+    margin-bottom: .75rem;
+  }
+}
+
+/* Mobile (≤760): split the hero into two stacked blocks instead of an
+   overlay. The banner alone (0.870 aspect) sits at the top, with the
+   eyebrow/heading/lede/CTAs flowing in a normal padded section beneath
+   it on a clean white background. Avoids the unfixable clash between the
+   page heading and the banner's baked-in text on small screens. */
+@media (max-width: 760px) {
   .hero {
     aspect-ratio: auto;
-    min-height: clamp(420px, 70vh, 620px);
+    display: block;
+    padding: 0;
+    background: var(--ncku-white);
+    color: var(--ncku-near-black);
+    overflow: visible;
+  }
+  /* corner scrim and bottom-right hero-content settle-target no longer
+     apply once the layout splits — turn the scrim off so it doesn't sit
+     in front of the .hero-content section below the banner. */
+  .hero::before { display: none; }
+
+  .hero-media {
+    position: relative;
+    inset: auto;
+    aspect-ratio: 3474 / 3994;
+    width: 100%;
+  }
+
+  .hero-content {
+    max-width: none;
+    padding: clamp(28px, 6vw, 40px) var(--gutter) clamp(32px, 7vw, 44px);
+    text-shadow: none;
+    /* the JS entrance pin/zoom centres on the viewport — meaningless once
+       the content lives in its own section. Force the resting transform. */
+    transform: none !important;
+  }
+  .hero-eyebrow {
+    color: var(--ncku-red);
+    font-size: .72rem;
+    margin-bottom: .9rem;
+  }
+  .hero-rule { background: var(--ncku-red); }
+  .hero-title {
+    color: var(--ncku-near-black);
+    font-size: clamp(1.7rem, 7vw, 2.4rem);
+    line-height: 1.12;
+    margin-bottom: .9rem;
+  }
+  .hero-lede {
+    color: rgba(0, 0, 0, .7);
+    font-size: clamp(.92rem, 3.6vw, 1.02rem);
+    margin-bottom: 1.4rem;
+  }
+  .hero .btn-ghost {
+    color: var(--ncku-near-black);
+    border-color: rgba(0, 0, 0, .22);
+  }
+  .hero .btn-ghost:hover {
+    background: rgba(0, 0, 0, .04);
+    border-color: var(--ncku-near-black);
+    color: var(--ncku-near-black);
   }
 }
 
